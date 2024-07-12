@@ -107,5 +107,5 @@ local function randzeta(n)
 end
 
 for i, v in ipairs(randzeta(60)) do
-    print(i, v)
+    print(i, v, #v)
 end
