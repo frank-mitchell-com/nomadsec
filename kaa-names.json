@@ -1,29 +1,27 @@
 {
     "min_syllables": 1,
-    "max_syllables": 5,
+    "max_syllables": 4,
     "initial": [
         "",
         "b",
-        "ts",
+        "c",
         "d",
         "f",
         "g",
-        "gh",
         "k",
-        "kh",
         "l",
         "m",
         "n",
         "p",
+        "q",
         "r",
         "s",
-        "sh",
         "t",
         "v",
         "w",
+        "x",
         "y",
         "z",
-        "zh"
     ],
     "vowels": [
         "aa",
@@ -40,6 +38,5 @@
         "ai",
         "oi",
         "ui"
-    ],
-    "final": []
+    ]
 }

@@ -3,16 +3,13 @@
 import itertools
 import json
 import random
+import sys
+import argparse
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
+from typing import Protocol
 
 MAX_NAME_LENGTH: int = 14
-
-DEFAULT_SYLLABLE_MINIMUM: int = 1
-DEFAULT_SYLLABLE_MAXIMUM: int = 4
-DEFAULT_SYLLABLE_INITIAL: Sequence[str] = "bcdfghjklmnpqrstvwxyz"
-DEFAULT_SYLLABLE_VOWELS: Sequence[str] = "aeiou"
-DEFAULT_SYLLABLE_FINAL: Sequence[str] = DEFAULT_SYLLABLE_INITIAL
 
 # coordinates are always f"{width:0d}{height:0d}"
 DEFAULT_SECTOR_HEIGHT: int = 10
@@ -22,6 +19,62 @@ DEFAULT_SECTOR_WIDTH: int = 8
 DEFAULT_DENSITY: int = 3
 MAXIMUM_DENSITY: int = 6
 MINIMUM_DENSITY: int = 1
+
+
+class NameSource(Protocol):
+    def name(self) -> str:
+        ...
+
+class SimpleNameSource:
+    def __init__(self, jsonsrc: dict):
+        assert "min_syllables" in jsonsrc
+        assert "max_syllables" in jsonsrc
+        assert "initial" in jsonsrc
+        assert "vowels" in jsonsrc
+
+        self._min = jsonsrc["min_syllables"]
+        self._max = jsonsrc["max_syllables"]
+        self._vowels = jsonsrc["vowels"]
+        self._initial = jsonsrc["initial"]
+        if "final" not in jsonsrc or not jsonsrc["final"]:
+            self._final = [""]
+        else:
+            self._final = jsonsrc["final"]
+        if "medial" not in jsonsrc:
+            self._medial = ["".join(x) for x in itertools.product(self._final, self._initial)]
+        else:
+            self._medial = jsonsrc["medial"]
+
+
+    def name(self) -> str:
+        name_seq: list[str] = []
+        nsyllables: int = random.randint(self._min, self._max)
+
+        name_seq.append(random.choice(self._initial))
+        name_seq.append(random.choice(self._vowels))
+        for i in range(1, nsyllables):
+            name_seq.append(random.choice(self._medial))
+            name_seq.append(random.choice(self._vowels))
+        name_seq.append(random.choice(self._final))
+
+        result = "".join(name_seq).capitalize()
+        if len(result) > MAX_NAME_LENGTH - 1:
+            return result[: MAX_NAME_LENGTH - 1] + "."
+        else:
+            return result
+
+
+class NameGenerator:
+    def __init__(self, source: NameSource) -> None:
+        self._source = source
+        self._pastnames = set()
+
+    def name(self) -> str:
+        newname: str = self._source.name()
+        while newname and newname in self._pastnames:
+            newname = self._source.name()
+        self._pastnames.add(newname)
+        return newname
 
 
 @dataclass
@@ -38,32 +91,9 @@ def sector(height: int, width: int, density: int) -> Collection[StarHex]:
     # Generate a number of stars proportional to density
     result: list[StarHex] = []
     for w, h in itertools.product(range(1, width + 1), range(1, height + 1)):
-        print(f"Considering {w},{h}")
         if random.randint(MINIMUM_DENSITY, MAXIMUM_DENSITY) <= density:
-            print(f"Appending star at {w},{h}")
             result.append(StarHex(w, h, ""))
-    print(result)
     return result
-
-
-def name(
-    min_syllables: int,
-    max_syllables: int,
-    initial: Sequence[str],
-    vowels: Sequence[str],
-    final: Sequence[str],
-) -> str:
-    name_seq: list[str] = []
-    nsyllables: int = random.randint(min_syllables, max_syllables)
-    for i in range(nsyllables):
-        name_seq.append(random.choice(initial or [""]))
-        name_seq.append(random.choice(vowels or [""]))
-        name_seq.append(random.choice(final or [""]))
-    result = "".join(name_seq).capitalize()
-    if len(result) > MAX_NAME_LENGTH - 1:
-        return result[: MAX_NAME_LENGTH - 1] + "."
-    else:
-        return result
 
 
 def main() -> None:
@@ -71,25 +101,21 @@ def main() -> None:
     sector_height: int = DEFAULT_SECTOR_HEIGHT
     density: int = DEFAULT_DENSITY
 
+    namesrc: NameSource = None
+
+    with open(sys.argv[1]) as jsonfile:
+        namesrc = NameGenerator(SimpleNameSource(json.load(jsonfile)))
+
     # generate a map of unnamed stars
     stars: Collection[StarHex] = sector(sector_height, sector_width, density)
 
     for star in stars:
         # generate a name for the star / planet
-        n: str = name(
-            DEFAULT_SYLLABLE_MINIMUM,
-            DEFAULT_SYLLABLE_MAXIMUM,
-            DEFAULT_SYLLABLE_INITIAL,
-            DEFAULT_SYLLABLE_VOWELS,
-            DEFAULT_SYLLABLE_FINAL,
-        )
-        star.name = n
+        star.name = namesrc.name()
         # randomly generate other stuff?
 
     # 4. Print out the map in the requested format:
     #    - Traveller format: see <https://travellermap.com/doc/fileformats>
-
-    print(stars)
 
     for s in stars:
         print(str(s))

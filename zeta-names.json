@@ -1,6 +1,6 @@
 {
-    "min_syllables": 2,
-    "max_syllables": 5,
+    "min_syllables": 1,
+    "max_syllables": 4,
     "initial": [
         "",
         "b",
