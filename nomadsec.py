@@ -3,9 +3,8 @@
 import itertools
 import json
 import random
-import sys
 import argparse
-from collections.abc import Collection, Sequence
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -22,8 +21,8 @@ MINIMUM_DENSITY: int = 1
 
 
 class NameSource(Protocol):
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
+
 
 class SimpleNameSource:
     def __init__(self, jsonsrc: dict, length=DEFAULT_MAX_NAME_LENGTH):
@@ -42,10 +41,11 @@ class SimpleNameSource:
         else:
             self._final = jsonsrc["final"]
         if "medial" not in jsonsrc:
-            self._medial = ["".join(x) for x in itertools.product(self._final, self._initial)]
+            self._medial = [
+                "".join(x) for x in itertools.product(self._final, self._initial)
+            ]
         else:
             self._medial = jsonsrc["medial"]
-
 
     def name(self) -> str:
         name_seq: list[str] = []
@@ -60,20 +60,22 @@ class SimpleNameSource:
 
         result = "".join(name_seq).capitalize()
         if len(result) > self._length - 1:
-            return result[:self._length - 1] + "."
+            return result[: self._length - 1] + "."
         else:
             return result
 
 
-class NameGenerator:
+class NameUniquifier:
     def __init__(self, source: NameSource) -> None:
         self._source = source
         self._pastnames = set()
 
     def name(self) -> str:
+        count: int = 0
         newname: str = self._source.name()
-        while newname and newname in self._pastnames:
+        while newname and newname in self._pastnames and count < 1000000:
             newname = self._source.name()
+            count += 1
         self._pastnames.add(newname)
         return newname
 
@@ -97,36 +99,50 @@ def sector(height: int, width: int, density: int) -> Collection[StarHex]:
 def main() -> None:
     # Parse arguments
     parser = argparse.ArgumentParser(
-            description="Generate a sector for the _FTL: Nomad_ RPG")
-    parser.add_argument("namefile",
-                        help="JSON file specifying random name generator",
-                        type=argparse.FileType(mode="r", encoding="ASCII"))
-    parser.add_argument("-x", "--width",
-                        help="number of hexes/parsecs across",
-                        default=DEFAULT_SECTOR_WIDTH,
-                        type=int)
-    parser.add_argument("-y", "--height",
-                        help="number of hexes/parsecs down",
-                        default=DEFAULT_SECTOR_HEIGHT,
-                        type=int)
-    parser.add_argument("-d", "--density", 
-                        help="density of stars (n in 6)",
-                        default=DEFAULT_DENSITY,
-                        type=int,
-                        choices=range(MINIMUM_DENSITY, MAXIMUM_DENSITY))
-    parser.add_argument("-l", "--length", 
-                        help="maximum length of star names",
-                        default=DEFAULT_MAX_NAME_LENGTH,
-                        type=int)
+        description="Generate a sector for the _FTL: Nomad_ RPG"
+    )
+    parser.add_argument(
+        "namefile",
+        help="JSON file specifying random name generator",
+        type=argparse.FileType(mode="r", encoding="ASCII"),
+    )
+    parser.add_argument(
+        "-x",
+        "--width",
+        help="number of hexes/parsecs across",
+        default=DEFAULT_SECTOR_WIDTH,
+        type=int,
+    )
+    parser.add_argument(
+        "-y",
+        "--height",
+        help="number of hexes/parsecs down",
+        default=DEFAULT_SECTOR_HEIGHT,
+        type=int,
+    )
+    parser.add_argument(
+        "-d",
+        "--density",
+        help="density of stars (n in 6)",
+        default=DEFAULT_DENSITY,
+        type=int,
+        choices=range(MINIMUM_DENSITY, MAXIMUM_DENSITY),
+    )
+    parser.add_argument(
+        "-l",
+        "--length",
+        help="maximum length of star names",
+        default=DEFAULT_MAX_NAME_LENGTH,
+        type=int,
+    )
     args = parser.parse_args()
-
-    # Record parameters
-    rseed = random.getstate()
 
     namesrc: NameSource = None
 
     with args.namefile as jsonfile:
-        namesrc = NameGenerator(SimpleNameSource(json.load(jsonfile), length=args.length))
+        namesrc = NameUniquifier(
+            SimpleNameSource(json.load(jsonfile), length=args.length)
+        )
 
     # generate a map of unnamed stars
     stars: Collection[StarHex] = sector(args.height, args.width, args.density)
@@ -136,10 +152,11 @@ def main() -> None:
         star.name = namesrc.name()
         # randomly generate other stuff?
 
-    # 4. Print out the map in the requested format:
-    #    - Traveller format: see <https://travellermap.com/doc/fileformats>
-
-    # print(f"# {rseed=}")
+    # Print out the list of stars in the requested format:
+    #    - Default format
+    #    - Custom _Nomad_ format (TBD)
+    #    - Traveller format: see <https://travellermap.com/doc/fileformats>;
+    #      need to generate or fake UPPs etc.
     print(f"# width={args.width} height={args.height} density={args.density}")
     print(f"# stars={len(stars)}")
     for s in stars:
