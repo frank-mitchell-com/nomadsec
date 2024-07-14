@@ -4,10 +4,14 @@ import itertools
 import json
 import random
 import argparse
-from collections.abc import Collection
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+# maximum retries to find a unique star name
+MAX_RETRIES: int = 1_000_000
+
+# default number of chars for star names
 DEFAULT_MAX_NAME_LENGTH: int = 14
 
 # coordinates are always f"{width:0d}{height:0d}"
@@ -25,12 +29,21 @@ class NameSource(Protocol):
 
 
 class SimpleNameSource:
-    def __init__(self, jsonsrc: dict, length=DEFAULT_MAX_NAME_LENGTH):
+    def __init__(self, jsonsrc: dict, length: int = DEFAULT_MAX_NAME_LENGTH):
         assert "min_syllables" in jsonsrc
         assert "max_syllables" in jsonsrc
         assert "initial" in jsonsrc
         assert "vowels" in jsonsrc
 
+        self._length: int
+        self._max: int
+        self._min: int
+        self._initial: Sequence[str]
+        self._medial: Sequence[str]
+        self._final: Sequence[str]
+        self._vowels: Sequence[str]
+
+        # TODO: Verify types from `jsonsrc`
         self._length = length
         self._min = jsonsrc["min_syllables"]
         self._max = jsonsrc["max_syllables"]
@@ -40,7 +53,7 @@ class SimpleNameSource:
             self._final = [""]
         else:
             self._final = jsonsrc["final"]
-        if "medial" not in jsonsrc:
+        if "medial" not in jsonsrc or not jsonsrc["medial"]:
             self._medial = [
                 "".join(x) for x in itertools.product(self._final, self._initial)
             ]
@@ -68,12 +81,12 @@ class SimpleNameSource:
 class NameUniquifier:
     def __init__(self, source: NameSource) -> None:
         self._source = source
-        self._pastnames = set()
+        self._pastnames: set[str] = set()
 
     def name(self) -> str:
         count: int = 0
         newname: str = self._source.name()
-        while newname and newname in self._pastnames and count < 1000000:
+        while newname and newname in self._pastnames and count < MAX_RETRIES:
             newname = self._source.name()
             count += 1
         self._pastnames.add(newname)
@@ -87,7 +100,7 @@ class StarHex:
     name: str
 
 
-def sector(height: int, width: int, density: int) -> Collection[StarHex]:
+def sector(height: int, width: int, density: int) -> Sequence[StarHex]:
     # Generate a number of stars proportional to density
     result: list[StarHex] = []
     for w, h in itertools.product(range(1, width + 1), range(1, height + 1)):
@@ -137,7 +150,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    namesrc: NameSource = None
+    namesrc: NameSource
 
     with args.namefile as jsonfile:
         namesrc = NameUniquifier(
@@ -145,20 +158,24 @@ def main() -> None:
         )
 
     # generate a map of unnamed stars
-    stars: Collection[StarHex] = sector(args.height, args.width, args.density)
+    stars: Sequence[StarHex] = sector(args.height, args.width, args.density)
 
     for star in stars:
         # generate a name for the star / planet
         star.name = namesrc.name()
         # randomly generate other stuff?
 
-    # Print out the list of stars in the requested format:
-    #    - Default format
+    # TODO: Customize format:
+    #    - Default format, i.e. what's below.
     #    - Custom _Nomad_ format (TBD)
     #    - Traveller format: see <https://travellermap.com/doc/fileformats>;
     #      need to generate or fake UPPs etc.
+
+    # Print out the list of stars
     print(f"# width={args.width} height={args.height} density={args.density}")
     print(f"# stars={len(stars)}")
+    print(f"# {'Name':{args.length-2}s}Hex")
+    print(f"#-{'-'*(args.length-3)} ----")
     for s in stars:
         print(f"{s.name:{args.length}s}{s.width:02d}{s.height:02d}")
 
