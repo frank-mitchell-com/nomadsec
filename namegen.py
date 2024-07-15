@@ -5,7 +5,6 @@ import json
 import random
 import argparse
 from collections.abc import Sequence
-from dataclasses import dataclass
 from typing import Protocol
 
 DEFAULT_NUMBER_OF_NAMES = 100

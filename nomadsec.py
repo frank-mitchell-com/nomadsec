@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
 import itertools
-import json
 import random
 import argparse
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Protocol
 
 # `pip install namemaker`
 import namemaker
