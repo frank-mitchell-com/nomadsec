@@ -1,7 +1,18 @@
-Programs to generate sector data for _Faster Than Light: Nomad_.
+Programs to generate sector data for the RPG _Faster Than Light: Nomad_,
+available from DriveThruRPG.com or Lulu.com.
+
 As of this writing, the format is somewhat idiosyncratic.
 Conversion to <https://travellermap.com/make/poster> formats are for the
 future.
+
+## Dependencies
+
+`nomadsec.py` depends on the `namemaker` library, which you can install like
+so:
+
+```
+pip install namemaker
+```
 
 ## Usage
 
@@ -77,15 +88,19 @@ See the `*-names.json` files in this directory.
 
 - Add docstrings.
 
+- Package as a wheel.
+
 - Generate _Nomad_ planets?
   - Distinguish stars and planets?
   - Inputs:
     - Settlement Level (if not random)
     - Prevailing Technology Age
   - Outputs:
-    - Trade Class
+    - Trade Class (random, modified by Settlement Level)
     - Physical Characteristic (fn of Trade Class & random roll)
     - Population (fn of Trade Class and random roll)
     - Technology Age (fn of Prevailing if given & random roll)
     - World Tag 1 (random)
     - World Tag 2 (random)
+
+- Generate _Traveller_-compatible data files.
