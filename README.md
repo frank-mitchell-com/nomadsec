@@ -81,14 +81,14 @@ Each grammar specification is a single JSON Object with the following keys:
   of a name (or a syllable, if `medial` is not given). If `final` is not
   given, it is assumed to be equal to `[""]` (a List of the empty string).
 
-See the `*-names.json` files in this directory.
+See the `grammar/*-grammar.json` files in this directory.
 
 
 ## TODO
 
 - Add docstrings.
 
-- Package as a wheel.
+- Make installable.
 
 - Generate _Nomad_ planets?
   - Distinguish stars and planets?
