@@ -84,7 +84,7 @@ def main() -> None:
     parser.add_argument(
         "namefile",
         help="JSON file specifying random name generator",
-        type=argparse.FileType(mode="r", encoding="ASCII"),
+        type=argparse.FileType(mode="r", encoding="UTF-8"),
     )
     parser.add_argument(
         "-n",
@@ -98,7 +98,7 @@ def main() -> None:
         "--output",
         help="output file",
         default="-",
-        type=argparse.FileType(mode="w", encoding="ASCII"),
+        type=argparse.FileType(mode="w", encoding="UTF-8"),
     )
     args = parser.parse_args()
 
