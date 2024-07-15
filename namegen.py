@@ -13,6 +13,7 @@ DEFAULT_NUMBER_OF_NAMES = 100
 # maximum retries to find a unique star name
 MAX_RETRIES: int = 1_000_000
 
+
 class NameSource(Protocol):
     def name(self) -> str: ...
 
@@ -94,7 +95,8 @@ def main() -> None:
         type=int,
     )
     parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         help="output file",
         default="-",
         type=argparse.FileType(mode="w", encoding="ASCII"),

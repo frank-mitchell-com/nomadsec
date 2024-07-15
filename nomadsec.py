@@ -15,7 +15,7 @@ import namemaker
 MAX_RETRIES: int = 1_000_000
 
 # default number of chars for star names
-DEFAULT_MAX_NAME_LENGTH: int = 14
+DEFAULT_MAX_NAME_LENGTH: int = 13
 
 # coordinates are always f"{width:0d}{height:0d}"
 DEFAULT_SECTOR_HEIGHT: int = 10
@@ -44,7 +44,7 @@ def sector(height: int, width: int, density: int) -> Sequence[StarHex]:
 
 
 def trim_name(name: str, length: int) -> str:
-    return name if len(name) < length - 1 else name[:length-1] + '.'
+    return name[:length]
 
 
 def main() -> None:
@@ -53,7 +53,8 @@ def main() -> None:
         description="Generate a sector for the _FTL: Nomad_ RPG"
     )
     parser.add_argument(
-        "-n", "--namelist",
+        "-n",
+        "--namelist",
         help="text file providing example names",
         default="Greek mythology.txt",
     )
@@ -109,10 +110,10 @@ def main() -> None:
     # Print out the list of stars
     print(f"# width={args.width} height={args.height} density={args.density}")
     print(f"# stars={len(stars)}")
-    print(f"#{'Star':{args.length-1}s}Hex")
-    print(f"#{'-'*(args.length-2)} ----")
+    print(f"#{'Star':{args.length}s} Hex")
+    print(f"#{'-'*(args.length-1)} ----")
     for s in stars:
-        print(f"{s.name:{args.length}s}{s.width:02d}{s.height:02d}")
+        print(f"{s.name:{args.length}s} {s.width:02d}{s.height:02d}")
 
 
 if __name__ == "__main__":

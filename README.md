@@ -6,16 +6,15 @@ future.
 ## Usage
 
 ```
-usage: nomadsec.py [-h] [-x WIDTH] [-y HEIGHT] [-d {1,2,3,4,5}] [-l LENGTH]
-                   namefile
+usage: nomadsec.py [-h] [-n NAMELIST] [-x WIDTH] [-y HEIGHT] [-d {1,2,3,4,5}]
+                   [-l LENGTH]
 
 Generate a sector for the _FTL: Nomad_ RPG
 
-positional arguments:
-  namefile              JSON file specifying random name generator
-
 options:
   -h, --help            show this help message and exit
+  -n NAMELIST, --namelist NAMELIST
+                        text file providing example names
   -x WIDTH, --width WIDTH
                         number of hexes/parsecs across
   -y HEIGHT, --height HEIGHT
@@ -26,11 +25,28 @@ options:
                         maximum length of star names
 ```
 
+The helper program `namegen` has the following syntax.
+
+```
+usage: namegen.py [-h] [-n NUMBER] [-o OUTPUT] namefile
+
+Generate a list of names based on a grammar
+
+positional arguments:
+  namefile              JSON file specifying random name generator
+
+options:
+  -h, --help            show this help message and exit
+  -n NUMBER, --number NUMBER
+                        number of names to generate
+  -o OUTPUT, --output OUTPUT
+                        output file
+```
+
 ### Random Name Generator Format
 
-The Random Name Generator constructs a name as a sequence of *syllables*.
-Each name generator specification is a single JSON Object with the following
-keys:
+The grammars for `namegen.py` constructs a name as a sequence of *syllables*.
+Each grammar specification is a single JSON Object with the following keys:
 
 `min_syllables`:
 : The minimum number of syllables in a name.
