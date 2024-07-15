@@ -8,6 +8,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+# `pip install namemaker`
+import namemaker
+
 # maximum retries to find a unique star name
 MAX_RETRIES: int = 1_000_000
 
@@ -22,75 +25,6 @@ DEFAULT_SECTOR_WIDTH: int = 8
 DEFAULT_DENSITY: int = 3
 MAXIMUM_DENSITY: int = 6
 MINIMUM_DENSITY: int = 1
-
-
-class NameSource(Protocol):
-    def name(self) -> str: ...
-
-
-class SimpleNameSource:
-    def __init__(self, jsonsrc: dict, length: int = DEFAULT_MAX_NAME_LENGTH):
-        assert "min_syllables" in jsonsrc
-        assert "max_syllables" in jsonsrc
-        assert "initial" in jsonsrc
-        assert "vowels" in jsonsrc
-
-        self._length: int
-        self._max: int
-        self._min: int
-        self._initial: Sequence[str]
-        self._medial: Sequence[str]
-        self._final: Sequence[str]
-        self._vowels: Sequence[str]
-
-        # TODO: Verify types from `jsonsrc`
-        self._length = length
-        self._min = jsonsrc["min_syllables"]
-        self._max = jsonsrc["max_syllables"]
-        self._vowels = jsonsrc["vowels"]
-        self._initial = jsonsrc["initial"]
-        if "final" not in jsonsrc or not jsonsrc["final"]:
-            self._final = [""]
-        else:
-            self._final = jsonsrc["final"]
-        if "medial" not in jsonsrc or not jsonsrc["medial"]:
-            self._medial = [
-                "".join(x) for x in itertools.product(self._final, self._initial)
-            ]
-        else:
-            self._medial = jsonsrc["medial"]
-
-    def name(self) -> str:
-        name_seq: list[str] = []
-        nsyllables: int = random.randint(self._min, self._max)
-
-        name_seq.append(random.choice(self._initial))
-        name_seq.append(random.choice(self._vowels))
-        for i in range(1, nsyllables):
-            name_seq.append(random.choice(self._medial))
-            name_seq.append(random.choice(self._vowels))
-        name_seq.append(random.choice(self._final))
-
-        result = "".join(name_seq).capitalize()
-        if len(result) > self._length - 1:
-            return result[: self._length - 1] + "."
-        else:
-            return result
-
-
-class NameUniquifier:
-    def __init__(self, source: NameSource) -> None:
-        self._source = source
-        self._pastnames: set[str] = set()
-
-    def name(self) -> str:
-        count: int = 0
-        newname: str = self._source.name()
-        while newname and newname in self._pastnames and count < MAX_RETRIES:
-            newname = self._source.name()
-            count += 1
-        self._pastnames.add(newname)
-        return newname
 
 
 @dataclass
@@ -109,15 +43,19 @@ def sector(height: int, width: int, density: int) -> Sequence[StarHex]:
     return result
 
 
+def trim_name(name: str, length: int) -> str:
+    return name if len(name) < length - 1 else name[:length-1] + '.'
+
+
 def main() -> None:
     # Parse arguments
     parser = argparse.ArgumentParser(
         description="Generate a sector for the _FTL: Nomad_ RPG"
     )
     parser.add_argument(
-        "namefile",
-        help="JSON file specifying random name generator",
-        type=argparse.FileType(mode="r", encoding="ASCII"),
+        "-n", "--namelist",
+        help="text file providing example names",
+        default="Greek mythology.txt",
     )
     parser.add_argument(
         "-x",
@@ -150,19 +88,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    namesrc: NameSource
-
-    with args.namefile as jsonfile:
-        namesrc = NameUniquifier(
-            SimpleNameSource(json.load(jsonfile), length=args.length)
-        )
+    # initialize namemaker
+    names = namemaker.make_name_set(args.namelist)
 
     # generate a map of unnamed stars
     stars: Sequence[StarHex] = sector(args.height, args.width, args.density)
 
     for star in stars:
         # generate a name for the star / planet
-        star.name = namesrc.name()
+        star.name = trim_name(names.make_name(), args.length)
+
         # randomly generate other stuff?
 
     # TODO: Customize format:
@@ -174,8 +109,8 @@ def main() -> None:
     # Print out the list of stars
     print(f"# width={args.width} height={args.height} density={args.density}")
     print(f"# stars={len(stars)}")
-    print(f"# {'Name':{args.length-2}s}Hex")
-    print(f"#-{'-'*(args.length-3)} ----")
+    print(f"#{'Star':{args.length-1}s}Hex")
+    print(f"#{'-'*(args.length-2)} ----")
     for s in stars:
         print(f"{s.name:{args.length}s}{s.width:02d}{s.height:02d}")
 
