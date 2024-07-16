@@ -14,7 +14,10 @@ so:
 pip install namemaker
 ```
 
-## Usage
+
+## `nomadsec.py`
+
+### Usage
 
 ```
 usage: nomadsec.py [-h] [-n NAMELIST] [-x WIDTH] [-y HEIGHT] [-d {1,2,3,4,5}]
@@ -44,7 +47,17 @@ options:
                         output file
 ```
 
-The helper program `namegen` has the following syntax.
+`NAMELIST` is a simple UTF-8 text file with one sample name per line.
+You can use **`namegen.py`** below to generate one, or just get a list of
+names from the real-life language of your choice.  If no list is given,
+the name generator defaults to an internal list of Greek mythology names.
+
+
+## `namegen.py`
+
+This helper program generates a list of words to feed into 
+
+### Usage
 
 ```
 usage: namegen.py [-h] [-n NUMBER] [-o OUTPUT] namefile
@@ -62,7 +75,7 @@ options:
                         output file
 ```
 
-### Random Name Generator Format
+### Random Name Generator Grammar Format
 
 The grammars for `namegen.py` constructs a name as a sequence of *syllables*.
 Each grammar specification is a single JSON Object with the following keys:
@@ -99,5 +112,13 @@ See the `grammar/*-grammar.json` files in this directory.
 - Make installable.
 
 - Distinguish stars and planets?
+
+- Generate "condensed" sector listing, using abbreviations for:
+  - Trade Classs
+  - Characteristic (maybe)
+  - Population (in hundreds, thousands, millions, or billions)
+  - Technology Age
+
+- Use `tabulate` to format table?
 
 - Generate _Traveller_-compatible data files.

@@ -101,70 +101,85 @@ TRADE_CLASS_UNEXPLORED: dict[int, str] = {
     12: Trade_Class.POOR,
 }
 
-CHARACTERISTICS: dict[Trade_Class, list[str]] = {
+
+class Characteristic(Enum):
+    ASTEROID = auto()
+    CORROSIVE = auto()
+    DESERT = auto()
+    ICEBALL = auto()
+    INERT = auto()
+    MARGINAL = auto()
+    OCEAN = auto()
+    PRIME = auto()
+    PRIMORDIAL = auto()
+    ROCKBALL = auto()
+    TAINTED = auto()
+
+
+CHARACTERISTICS: dict[Trade_Class, list[Characteristic]] = {
     Trade_Class.AGRICULTURAL: [
-        "Prime",
-        "Prime",
-        "Tainted",
-        "Tainted",
-        "Marginal",
-        "Ocean",
+        Characteristic.PRIME,
+        Characteristic.PRIME,
+        Characteristic.TAINTED,
+        Characteristic.TAINTED,
+        Characteristic.MARGINAL,
+        Characteristic.OCEAN,
     ],
     Trade_Class.GARDEN: [
-        "Prime",
-        "Tainted",
-        "Marginal",
-        "Ocean",
-        "Desert",
-        "Primordial",
+        Characteristic.PRIME,
+        Characteristic.TAINTED,
+        Characteristic.MARGINAL,
+        Characteristic.OCEAN,
+        Characteristic.DESERT,
+        Characteristic.PRIMORDIAL,
     ],
     Trade_Class.INDUSTRIAL: [
-        "Asteroid",
-        "Rockball",
-        "Marginal",
-        "Tainted",
-        "Tainted",
-        "Iceball",
+        Characteristic.ASTEROID,
+        Characteristic.ROCKBALL,
+        Characteristic.MARGINAL,
+        Characteristic.TAINTED,
+        Characteristic.TAINTED,
+        Characteristic.ICEBALL,
     ],
     Trade_Class.NON_AGRICULTURAL: [
-        "Asteroid",
-        "Rockball",
-        "Iceball",
-        "Marginal",
-        "Tainted",
-        "Inert",
+        Characteristic.ASTEROID,
+        Characteristic.ROCKBALL,
+        Characteristic.ICEBALL,
+        Characteristic.MARGINAL,
+        Characteristic.TAINTED,
+        Characteristic.INERT,
     ],
     Trade_Class.NON_INDUSTRIAL: [
-        "Asteroid",
-        "Rockball",
-        "Rockball",
-        "Marginal",
-        "Tainted",
-        "Inert",
+        Characteristic.ASTEROID,
+        Characteristic.ROCKBALL,
+        Characteristic.ROCKBALL,
+        Characteristic.MARGINAL,
+        Characteristic.TAINTED,
+        Characteristic.INERT,
     ],
     Trade_Class.POOR: [
-        "Rockball",
-        "Rockball",
-        "Iceball",
-        "Asteroid",
-        "Inert",
-        "Corrosive",
+        Characteristic.ROCKBALL,
+        Characteristic.ROCKBALL,
+        Characteristic.ICEBALL,
+        Characteristic.ASTEROID,
+        Characteristic.INERT,
+        Characteristic.CORROSIVE,
     ],
     Trade_Class.RESOURCE: [
-        "Asteroid",
-        "Rockball",
-        "Iceball",
-        "Marginal",
-        "Inert",
-        "Corrosive",
+        Characteristic.ASTEROID,
+        Characteristic.ROCKBALL,
+        Characteristic.ICEBALL,
+        Characteristic.MARGINAL,
+        Characteristic.INERT,
+        Characteristic.CORROSIVE,
     ],
     Trade_Class.RICH: [
-        "Prime",
-        "Prime",
-        "Tainted",
-        "Tainted",
-        "Marginal",
-        "Ocean",
+        Characteristic.PRIME,
+        Characteristic.PRIME,
+        Characteristic.TAINTED,
+        Characteristic.TAINTED,
+        Characteristic.MARGINAL,
+        Characteristic.OCEAN,
     ],
 }
 
@@ -377,9 +392,13 @@ def trade_class_str(trade: Trade_Class) -> str:
     return string.capwords(trade.name.replace("_", " ")).replace(" ", "-")
 
 
-def characteristic(trade_class: str) -> str:
+def characteristic(trade_class: str) -> Characteristic:
     assert trade_class in CHARACTERISTICS
     return CHARACTERISTICS[trade_class][one_die() - 1]
+
+
+def chara_str(c: Characteristic) -> str:
+    return c.name.capitalize()
 
 
 def population(trade_class: Trade_Class, settlement: str) -> int:
@@ -429,7 +448,7 @@ class Star_Hex:
     height: int
     name: str
     trade_class: Trade_Class | None
-    characteristic: str
+    chara: Characteristic | None
     population: int
     tech_age: Tech_Age | None
     world_tag_1: str
@@ -441,12 +460,36 @@ def sector(height: int, width: int, density: int) -> Sequence[Star_Hex]:
     result: list[Star_Hex] = []
     for w, h in itertools.product(range(1, width + 1), range(1, height + 1)):
         if random.randint(MINIMUM_DENSITY, MAXIMUM_DENSITY) <= density:
-            result.append(Star_Hex(w, h, "", None, "", 0, None, "", ""))
+            result.append(Star_Hex(w, h, "", None, None, 0, None, "", ""))
     return result
 
 
 def trim_str(name: str, length: int) -> str:
     return name[:length]
+
+
+def write_as_text(outfile, args, stars: list[Star_Hex]) -> None:
+    outfile.write(f"# width={args.width} height={args.height} density={args.density}\n")
+    outfile.write(f"# settlement={args.settlement} tech={args.tech}\n")
+    outfile.write(f"# planets={len(stars)}\n")
+    outfile.write(
+        f"#{'Planet':{args.length}s} Hex Trade Class      Chara.     "
+        "     Population Tech. Age          World Tags\n"
+    )
+    outfile.write(
+        f"#{'-'*(args.length-1)} ---- ---------------- ----------"
+        " -------------- ------------------ ------------------------------\n"
+    )
+    for s in stars:
+        outfile.write(
+            f"{s.name:{args.length}s}"
+            f" {s.width:02d}{s.height:02d}"
+            f" {trade_class_str(s.trade_class):16s}"
+            f" {chara_str(s.chara):10s}"
+            f" {s.population:14_d}"
+            f" {tech_age_str(s.tech_age):18s}"
+            f" {s.world_tag_1}, {s.world_tag_2}\n"
+        )
 
 
 def main() -> None:
@@ -524,7 +567,7 @@ def main() -> None:
         star.name = trim_str(names.make_name(), args.length)
         # generate the trade type
         star.trade_class = trade_class(args.settlement)
-        star.characteristic = characteristic(star.trade_class)
+        star.chara = characteristic(star.trade_class)
         star.population = population(star.trade_class, args.settlement)
         if star.population == 0:
             # This isn't in the rules, but it makes sense to me
@@ -544,29 +587,7 @@ def main() -> None:
 
     # Print out the list of stars
     with args.output as outfile:
-        outfile.write(
-            f"# width={args.width} height={args.height} density={args.density}\n"
-        )
-        outfile.write(f"# settlement={args.settlement} tech={args.tech}\n")
-        outfile.write(f"# planets={len(stars)}\n")
-        outfile.write(
-            f"#{'Planet':{args.length}s} Hex Trade Class      Charactr. "
-            "     Population Tech. Age          World Tags\n"
-        )
-        outfile.write(
-            f"#{'-'*(args.length-1)} ---- ---------------- ----------"
-            " -------------- ------------------ ------------------------------\n"
-        )
-        for s in stars:
-            outfile.write(
-                f"{s.name:{args.length}s}"
-                f" {s.width:02d}{s.height:02d}"
-                f" {trade_class_str(s.trade_class):16s}"
-                f" {s.characteristic:10s}"
-                f" {s.population:14_d}"
-                f" {tech_age_str(s.tech_age):18s}"
-                f" {s.world_tag_1}, {s.world_tag_2}\n"
-            )
+        write_as_text(outfile, args, stars)
 
 
 if __name__ == "__main__":
