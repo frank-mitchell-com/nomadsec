@@ -13,9 +13,6 @@ import namemaker
 
 ###################### CONSTANTS ###############################
 
-# maximum retries to find a unique star name
-MAX_RETRIES: int = 1_000_000
-
 # default number of chars for star names
 DEFAULT_MAX_NAME_LENGTH: int = 13
 
@@ -45,8 +42,7 @@ def nomad_dice(nkeep: int = 2, nadv: int = 0, disadvantage=True) -> int:
     rolls: list[int] = sorted((one_die() for _ in range(ntotal)))
     if nadv < 0 or disadvantage:
         return sum(rolls[:nkeep])
-    else:
-        return sum(rolls[-nkeep:])
+    return sum(rolls[-nkeep:])
 
 
 ####################### TABLES ################################
@@ -376,16 +372,15 @@ def trade_class(sector_type: str | None) -> str:
     if sector_type == "unexplored":
         result = nomad_dice(2)
         return TRADE_CLASS_UNEXPLORED[result]
+    if sector_type == "core":
+        result = nomad_dice(2, +2)
+    elif sector_type == "frontier":
+        result = nomad_dice(2, -1)
+    elif sector_type == "conflict":
+        result = nomad_dice(2, +1)
     else:
-        if sector_type == "core":
-            result = nomad_dice(2, +2)
-        elif sector_type == "frontier":
-            result = nomad_dice(2, -1)
-        elif sector_type == "conflict":
-            result = nomad_dice(2, +1)
-        else:
-            result = nomad_dice(2)
-        return TRADE_CLASS_SETTLED[result]
+        result = nomad_dice(2)
+    return TRADE_CLASS_SETTLED[result]
 
 
 def trade_class_str(trade: Trade_Class) -> str:
@@ -404,13 +399,12 @@ def chara_str(c: Characteristic) -> str:
 def population(trade_class: Trade_Class, settlement: str) -> int:
     if trade_class == Trade_Class.POOR and settlement == "unexplored":
         return 0
-    else:
-        assert trade_class in POPULATION
-        popspec: Population_Spec = POPULATION[trade_class]
-        pop: int = (nomad_dice(popspec.ndice) + popspec.modifier) * popspec.multiplier
-        if pop < 0:
-            return 0
-        return pop
+    assert trade_class in POPULATION
+    popspec: Population_Spec = POPULATION[trade_class]
+    pop: int = (nomad_dice(popspec.ndice) + popspec.modifier) * popspec.multiplier
+    if pop < 0:
+        return 0
+    return pop
 
 
 def tech_age() -> Tech_Age:
@@ -422,10 +416,9 @@ def tech_age_offset(age: Tech_Age) -> Tech_Age:
     index: int = age.value
     if index + offset < 0:
         return Tech_Age.NO_TECHNOLOGY
-    elif index + offset > len(Tech_Age):
+    if index + offset > len(Tech_Age):
         return Tech_Age.COSMIC
-    else:
-        return TECHNOLOGY_AGES[index + offset]
+    return TECHNOLOGY_AGES[index + offset]
 
 
 def tech_age_str(age: Tech_Age) -> str:
@@ -435,8 +428,7 @@ def tech_age_str(age: Tech_Age) -> str:
 def world_tag(index: int = 1) -> str:
     if index % 2 == 1:
         return WORLD_TAG_TABLE_1[one_die() - 1][one_die() - 1]
-    else:
-        return WORLD_TAG_TABLE_2[one_die() - 1][one_die() - 1]
+    return WORLD_TAG_TABLE_2[one_die() - 1][one_die() - 1]
 
 
 ####################### SECTORS ###############################
@@ -455,10 +447,12 @@ class Star_Hex:
     world_tag_2: str
 
 
-def sector(height: int, width: int, density: int) -> Sequence[Star_Hex]:
+def sector(
+    width: int = 8, height: int = 10, density: int = 3, x: int = 1, y: int = 1
+) -> Sequence[Star_Hex]:
     # Generate a number of stars proportional to density
     result: list[Star_Hex] = []
-    for w, h in itertools.product(range(1, width + 1), range(1, height + 1)):
+    for w, h in itertools.product(range(x, width + x), range(y, height + y)):
         if random.randint(MINIMUM_DENSITY, MAXIMUM_DENSITY) <= density:
             result.append(Star_Hex(w, h, "", None, None, 0, None, "", ""))
     return result
@@ -466,6 +460,42 @@ def sector(height: int, width: int, density: int) -> Sequence[Star_Hex]:
 
 def trim_str(name: str, length: int) -> str:
     return name[:length]
+
+
+def write_as_csv(outfile, stars: list[Star_Hex]) -> None:
+    outfile.write(
+        '"Planet","Hex","Trade Class","Chara.",'
+        '"Population","Tech. Age","World Tag 1","World Tag 2"\n'
+    )
+    for s in stars:
+        outfile.write(
+            f'"{s.name}"'
+            f',"{s.width:02d}{s.height:02d}"'
+            f',"{trade_class_str(s.trade_class)}"'
+            f',"{chara_str(s.chara)}"'
+            f",{s.population}"
+            f',"{tech_age_str(s.tech_age)}"'
+            f',"{s.world_tag_1}"'
+            f',"{s.world_tag_2}"\n'
+        )
+
+
+def write_as_xsv(outfile, stars: list[Star_Hex], sep: str = "\t") -> None:
+    outfile.write(
+        f"Planet{sep}Hex{sep}Trade Class{sep}Chara.{sep}"
+        f"Population{sep}Tech. Age{sep}World Tag 1{sep}World Tag 2\n"
+    )
+    for s in stars:
+        outfile.write(
+            f"{s.name}"
+            f"{sep}{s.width:02d}{s.height:02d}"
+            f"{sep}{trade_class_str(s.trade_class)}"
+            f"{sep}{chara_str(s.chara)}"
+            f"{sep}{s.population}"
+            f"{sep}{tech_age_str(s.tech_age)}"
+            f"{sep}{s.world_tag_1}"
+            f"{sep}{s.world_tag_2}\n"
+        )
 
 
 def write_as_text(outfile, args, stars: list[Star_Hex]) -> None:
@@ -504,17 +534,31 @@ def main() -> None:
         default="Greek mythology.txt",
     )
     parser.add_argument(
-        "-x",
+        "-W",
         "--width",
         help="number of hexes/parsecs across",
         default=DEFAULT_SECTOR_WIDTH,
         type=int,
     )
     parser.add_argument(
-        "-y",
+        "-H",
         "--height",
         help="number of hexes/parsecs down",
         default=DEFAULT_SECTOR_HEIGHT,
+        type=int,
+    )
+    parser.add_argument(
+        "-X",
+        "--start-width",
+        help="first index across",
+        default=1,
+        type=int,
+    )
+    parser.add_argument(
+        "-Y",
+        "--start-height",
+        help="first index down",
+        default=1,
         type=int,
     )
     parser.add_argument(
@@ -554,13 +598,37 @@ def main() -> None:
         default="-",
         type=argparse.FileType(mode="w", encoding="UTF-8"),
     )
+    parser.add_argument(
+        "--separator",
+        help="write with the given character as a separator",
+    )
+    parser.add_argument(
+        "--csv",
+        help="write as comma-separated values",
+        action="store_const",
+        dest="separator",
+        const=",",
+    )
+    parser.add_argument(
+        "--tsv",
+        help="write as tab-separated values",
+        action="store_const",
+        dest="separator",
+        const="\t",
+    )
     args = parser.parse_args()
 
     # initialize namemaker
     names = namemaker.make_name_set(args.namelist)
 
     # generate a map of unnamed stars
-    stars: Sequence[Star_Hex] = sector(args.height, args.width, args.density)
+    stars: Sequence[Star_Hex] = sector(
+        height=args.height,
+        width=args.width,
+        density=args.density,
+        x=args.start_width,
+        y=args.start_height,
+    )
 
     for star in stars:
         # generate a name for the star / planet
@@ -587,7 +655,13 @@ def main() -> None:
 
     # Print out the list of stars
     with args.output as outfile:
-        write_as_text(outfile, args, stars)
+        if args.separator:
+            if args.separator == ",":
+                write_as_csv(outfile, stars)
+            else:
+                write_as_xsv(outfile, stars, args.separator)
+        else:
+            write_as_text(outfile, args, stars)
 
 
 if __name__ == "__main__":

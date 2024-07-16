@@ -55,7 +55,7 @@ the name generator defaults to an internal list of Greek mythology names.
 
 ## `namegen.py`
 
-This helper program generates a list of words to feed into 
+This helper program generates a list of words to feed into **`nomadsec.py`**.
 
 ### Usage
 
@@ -94,7 +94,7 @@ Each grammar specification is a single JSON Object with the following keys:
 
 `medial` (optional):
 : A List of Strings containing zero or more letters that occur *between*
-  `vowels`.  If not given, the code will use the product of 
+  `vowels`.  If not given, the code will use the product of
   `initial` &times; `final`.
 
 `final` (optional):
@@ -111,10 +111,8 @@ See the `grammar/*-grammar.json` files in this directory.
 
 - Make installable.
 
-- Distinguish stars and planets?
-
 - Generate "condensed" sector listing, using abbreviations for:
-  - Trade Classs
+  - Trade Class
   - Characteristic (maybe)
   - Population (in hundreds, thousands, millions, or billions)
   - Technology Age
