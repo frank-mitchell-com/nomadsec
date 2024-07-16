@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+import argparse
 import itertools
 import random
-import argparse
+import string
 from collections.abc import Sequence
 from dataclasses import dataclass
+from enum import Enum, auto
 
 # `pip install namemaker`
 import namemaker
@@ -60,36 +62,47 @@ SETTLEMENT_TYPES: list[str] = [
 ]
 
 
+class Trade_Class(Enum):
+    AGRICULTURAL = auto()
+    GARDEN = auto()
+    INDUSTRIAL = auto()
+    NON_AGRICULTURAL = auto()
+    NON_INDUSTRIAL = auto()
+    POOR = auto()
+    RESOURCE = auto()
+    RICH = auto()
+
+
 TRADE_CLASS_SETTLED: dict[int, str] = {
-    2: "Garden",
-    3: "Resource",
-    4: "Poor",
-    5: "Poor",
-    6: "Non-Agricultural",
-    7: "Non-Industrial",
-    8: "Agricultural",
-    9: "Agricultural",
-    10: "Rich",
-    11: "Rich",
-    12: "Industrial",
+    2: Trade_Class.GARDEN,
+    3: Trade_Class.RESOURCE,
+    4: Trade_Class.POOR,
+    5: Trade_Class.POOR,
+    6: Trade_Class.NON_AGRICULTURAL,
+    7: Trade_Class.NON_INDUSTRIAL,
+    8: Trade_Class.AGRICULTURAL,
+    9: Trade_Class.AGRICULTURAL,
+    10: Trade_Class.RICH,
+    11: Trade_Class.RICH,
+    12: Trade_Class.INDUSTRIAL,
 }
 
 TRADE_CLASS_UNEXPLORED: dict[int, str] = {
-    2: "Poor",
-    3: "Garden",
-    4: "Garden",
-    5: "Garden",
-    6: "Resource",
-    7: "Resource",
-    8: "Poor",
-    9: "Poor",
-    10: "Poor",
-    11: "Poor",
-    12: "Poor",
+    2: Trade_Class.POOR,
+    3: Trade_Class.GARDEN,
+    4: Trade_Class.GARDEN,
+    5: Trade_Class.GARDEN,
+    6: Trade_Class.RESOURCE,
+    7: Trade_Class.RESOURCE,
+    8: Trade_Class.POOR,
+    9: Trade_Class.POOR,
+    10: Trade_Class.POOR,
+    11: Trade_Class.POOR,
+    12: Trade_Class.POOR,
 }
 
-CHARACTERISTICS: dict[str, list[str]] = {
-    "Agricultural": [
+CHARACTERISTICS: dict[Trade_Class, list[str]] = {
+    Trade_Class.AGRICULTURAL: [
         "Prime",
         "Prime",
         "Tainted",
@@ -97,7 +110,7 @@ CHARACTERISTICS: dict[str, list[str]] = {
         "Marginal",
         "Ocean",
     ],
-    "Garden": [
+    Trade_Class.GARDEN: [
         "Prime",
         "Tainted",
         "Marginal",
@@ -105,7 +118,7 @@ CHARACTERISTICS: dict[str, list[str]] = {
         "Desert",
         "Primordial",
     ],
-    "Industrial": [
+    Trade_Class.INDUSTRIAL: [
         "Asteroid",
         "Rockball",
         "Marginal",
@@ -113,39 +126,39 @@ CHARACTERISTICS: dict[str, list[str]] = {
         "Tainted",
         "Iceball",
     ],
-    "Non-Agricultural": [
+    Trade_Class.NON_AGRICULTURAL: [
         "Asteroid",
         "Rockball",
         "Iceball",
-        "Marginal",
-        "Tainted",
-        "Inert",
-    ],
-    "Non-Industrial": [
-        "Asteroid",
-        "Rockball",
-        "Rockball",
         "Marginal",
         "Tainted",
         "Inert",
     ],
-    "Poor": [
-        "Rockball",
-        "Rockball",
-        "Iceball",
-        "Asteroid",
-        "Inert",
-        "Corrosive",
-    ],
-    "Resource": [
+    Trade_Class.NON_INDUSTRIAL: [
         "Asteroid",
         "Rockball",
-        "Iceball",
+        "Rockball",
         "Marginal",
+        "Tainted",
+        "Inert",
+    ],
+    Trade_Class.POOR: [
+        "Rockball",
+        "Rockball",
+        "Iceball",
+        "Asteroid",
         "Inert",
         "Corrosive",
     ],
-    "Rich": [
+    Trade_Class.RESOURCE: [
+        "Asteroid",
+        "Rockball",
+        "Iceball",
+        "Marginal",
+        "Inert",
+        "Corrosive",
+    ],
+    Trade_Class.RICH: [
         "Prime",
         "Prime",
         "Tainted",
@@ -163,62 +176,64 @@ class Population_Spec:
     multiplier: int
 
 
-POPULATION: dict[str, Population_Spec] = {
-    "Agricultural": Population_Spec(1, 0, 50_000_000),
-    "Garden": Population_Spec(0, 0, 0),
-    "Industrial": Population_Spec(2, 0, 500_000_000),
-    "Non-Agricultural": Population_Spec(1, 0, 200_000_000),
-    "Non-Industrial": Population_Spec(2, 0, 50_000),
-    "Poor": Population_Spec(2, -8, 500),  # none if unexplored
-    "Resource": Population_Spec(0, 0, 0),
-    "Rich": Population_Spec(4, 0, 100_000_000),
+POPULATION: dict[Trade_Class, Population_Spec] = {
+    Trade_Class.AGRICULTURAL: Population_Spec(1, 0, 50_000_000),
+    Trade_Class.GARDEN: Population_Spec(0, 0, 0),
+    Trade_Class.INDUSTRIAL: Population_Spec(2, 0, 500_000_000),
+    Trade_Class.NON_AGRICULTURAL: Population_Spec(1, 0, 200_000_000),
+    Trade_Class.NON_INDUSTRIAL: Population_Spec(2, 0, 50_000),
+    Trade_Class.POOR: Population_Spec(2, -8, 500),  # none if unexplored
+    Trade_Class.RESOURCE: Population_Spec(0, 0, 0),
+    Trade_Class.RICH: Population_Spec(4, 0, 100_000_000),
 }
 
 
-TECHNOLOGY_AGES: list[str] = [
-    "No Technology",
-    "Early Primitive",
-    "Late Primitive",
-    "Early Mechanical",
-    "Late Mechanical",
-    "Early Atomic",
-    "Late Atomic",
-    "Early Space",
-    "Late Space",
-    "Early Interstellar",
-    "Late Interstellar",
-    "Early Galactic",
-    "Late Galactic",
-    "Cosmic",
-]
+class Tech_Age(Enum):
+    NO_TECHNOLOGY = 0
+    EARLY_PRIMITIVE = 1
+    LATE_PRIMITIVE = 2
+    EARLY_MECHANICAL = 3
+    LATE_MECHANICAL = 4
+    EARLY_ATOMIC = 5
+    LATE_ATOMIC = 6
+    EARLY_SPACE = 7
+    LATE_SPACE = 8
+    EARLY_INTERSTELLAR = 9
+    LATE_INTERSTELLAR = 10
+    EARLY_GALACTIC = 11
+    LATE_GALACTIC = 12
+    COSMIC = 13
 
-TECHNOLOGY_AGES_ABBREVS: dict[str, str] = {
-    "ep": "Early Primitive",
-    "lp": "Late Primitive",
-    "em": "Early Mechanical",
-    "lm": "Late Mechanical",
-    "ea": "Early Atomic",
-    "la": "Late Atomic",
-    "es": "Early Space",
-    "ls": "Late Space",
-    "ei": "Early Interstellar",
-    "li": "Late Interstellar",
-    "eg": "Early Galactic",
-    "lg": "Late Galactic",
+
+TECHNOLOGY_AGES: list[Tech_Age] = list(Tech_Age)
+
+TECHNOLOGY_AGES_ABBREVS: dict[str, Tech_Age] = {
+    "ep": Tech_Age.EARLY_PRIMITIVE,
+    "lp": Tech_Age.LATE_PRIMITIVE,
+    "em": Tech_Age.EARLY_MECHANICAL,
+    "lm": Tech_Age.LATE_MECHANICAL,
+    "ea": Tech_Age.EARLY_ATOMIC,
+    "la": Tech_Age.LATE_ATOMIC,
+    "es": Tech_Age.EARLY_SPACE,
+    "ls": Tech_Age.LATE_SPACE,
+    "ei": Tech_Age.EARLY_INTERSTELLAR,
+    "li": Tech_Age.LATE_INTERSTELLAR,
+    "eg": Tech_Age.EARLY_GALACTIC,
+    "lg": Tech_Age.LATE_GALACTIC,
 }
 
-TECHNOLOGY_AGES_TABLE: dict[int, str] = {
-    2: "Early Primitive",
-    3: "Late Primitive",
-    4: "Late Mechanical",
-    5: "Late Atomic",
-    6: "Early Space",
-    7: "Late Space",
-    8: "Early Interstellar",
-    9: "Late Interstellar",
-    10: "Early Interstellar",  # (sic)
-    11: "Early Galactic",
-    12: "Late Galactic",
+TECHNOLOGY_AGES_TABLE: dict[int, Tech_Age] = {
+    2: Tech_Age.EARLY_PRIMITIVE,
+    3: Tech_Age.LATE_PRIMITIVE,
+    4: Tech_Age.LATE_MECHANICAL,
+    5: Tech_Age.LATE_ATOMIC,
+    6: Tech_Age.EARLY_SPACE,
+    7: Tech_Age.LATE_SPACE,
+    8: Tech_Age.EARLY_INTERSTELLAR,
+    9: Tech_Age.LATE_INTERSTELLAR,
+    10: Tech_Age.EARLY_INTERSTELLAR,  # (sic)
+    11: Tech_Age.EARLY_GALACTIC,
+    12: Tech_Age.LATE_GALACTIC,
 }
 
 TECHNOLOGY_AGES_OFFSET_TABLE: dict[int, int] = {
@@ -358,34 +373,44 @@ def trade_class(sector_type: str | None) -> str:
         return TRADE_CLASS_SETTLED[result]
 
 
+def trade_class_str(trade: Trade_Class) -> str:
+    return string.capwords(trade.name.replace("_", " ")).replace(" ", "-")
+
+
 def characteristic(trade_class: str) -> str:
     assert trade_class in CHARACTERISTICS
     return CHARACTERISTICS[trade_class][one_die() - 1]
 
 
-def population(trade_class: str, settlement: str) -> int:
-    if trade_class == "Poor" and settlement == "unexplored":
+def population(trade_class: Trade_Class, settlement: str) -> int:
+    if trade_class == Trade_Class.POOR and settlement == "unexplored":
         return 0
     else:
         assert trade_class in POPULATION
         popspec: Population_Spec = POPULATION[trade_class]
         pop: int = (nomad_dice(popspec.ndice) + popspec.modifier) * popspec.multiplier
-        return pop if pop >= 0 else 0
+        if pop < 0:
+            return 0
+        return pop
 
 
-def tech_age() -> str:
+def tech_age() -> Tech_Age:
     return TECHNOLOGY_AGES_TABLE[nomad_dice(2)]
 
 
-def tech_age_offset(tech: str) -> str:
+def tech_age_offset(age: Tech_Age) -> Tech_Age:
     offset: int = TECHNOLOGY_AGES_OFFSET_TABLE[nomad_dice(2)]
-    index: int = TECHNOLOGY_AGES.index(tech)
+    index: int = age.value
     if index + offset < 0:
-        return TECHNOLOGY_AGES[0]
-    elif index + offset > len(TECHNOLOGY_AGES):
-        return TECHNOLOGY_AGES[-1]
+        return Tech_Age.NO_TECHNOLOGY
+    elif index + offset > len(Tech_Age):
+        return Tech_Age.COSMIC
     else:
         return TECHNOLOGY_AGES[index + offset]
+
+
+def tech_age_str(age: Tech_Age) -> str:
+    return string.capwords(age.name.replace("_", " "))
 
 
 def world_tag(index: int = 1) -> str:
@@ -403,10 +428,10 @@ class Star_Hex:
     width: int
     height: int
     name: str
-    trade_class: str
+    trade_class: Trade_Class | None
     characteristic: str
     population: int
-    tech_age: str
+    tech_age: Tech_Age | None
     world_tag_1: str
     world_tag_2: str
 
@@ -416,11 +441,11 @@ def sector(height: int, width: int, density: int) -> Sequence[Star_Hex]:
     result: list[Star_Hex] = []
     for w, h in itertools.product(range(1, width + 1), range(1, height + 1)):
         if random.randint(MINIMUM_DENSITY, MAXIMUM_DENSITY) <= density:
-            result.append(Star_Hex(w, h, "", "", "", 0, "", "", ""))
+            result.append(Star_Hex(w, h, "", None, "", 0, None, "", ""))
     return result
 
 
-def trim_name(name: str, length: int) -> str:
+def trim_str(name: str, length: int) -> str:
     return name[:length]
 
 
@@ -479,6 +504,13 @@ def main() -> None:
         default=DEFAULT_MAX_NAME_LENGTH,
         type=int,
     )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="output file",
+        default="-",
+        type=argparse.FileType(mode="w", encoding="UTF-8"),
+    )
     args = parser.parse_args()
 
     # initialize namemaker
@@ -489,17 +521,17 @@ def main() -> None:
 
     for star in stars:
         # generate a name for the star / planet
-        star.name = trim_name(names.make_name(), args.length)
+        star.name = trim_str(names.make_name(), args.length)
         # generate the trade type
         star.trade_class = trade_class(args.settlement)
         star.characteristic = characteristic(star.trade_class)
         star.population = population(star.trade_class, args.settlement)
         if star.population == 0:
             # This isn't in the rules, but it makes sense to me
-            star.tech_age = TECHNOLOGY_AGES[0]  # No Technology
+            star.tech_age = Tech_Age.NO_TECHNOLOGY  # No Technology
         elif args.tech:
-            techname: str = TECHNOLOGY_AGES_ABBREVS[args.tech]
-            star.tech_age = tech_age_offset(techname)
+            age: Tech_Age = TECHNOLOGY_AGES_ABBREVS[args.tech]
+            star.tech_age = tech_age_offset(age)
         else:
             star.tech_age = tech_age()
         star.world_tag_1 = world_tag(1)
@@ -515,7 +547,7 @@ def main() -> None:
     print(f"# settlement={args.settlement} tech={args.tech}")
     print(f"# stars={len(stars)}")
     print(
-        f"#{'Star':{args.length}s} Hex Trade Class      Charactr. "
+        f"#{'Planet':{args.length}s} Hex Trade Class      Charactr. "
         "     Population Tech. Age          World Tags"
     )
     print(
@@ -524,9 +556,13 @@ def main() -> None:
     )
     for s in stars:
         print(
-            f"{s.name:{args.length}s} {s.width:02d}{s.height:02d}"
-            f" {s.trade_class:16s} {s.characteristic:10s} {s.population:14_d}"
-            f" {s.tech_age:18s} {s.world_tag_1}, {s.world_tag_2}"
+            f"{s.name:{args.length}s}"
+            f" {s.width:02d}{s.height:02d}"
+            f" {trade_class_str(s.trade_class):16s}"
+            f" {s.characteristic:10s}"
+            f" {s.population:14_d}"
+            f" {tech_age_str(s.tech_age):18s}"
+            f" {s.world_tag_1}, {s.world_tag_2}"
         )
 
 
