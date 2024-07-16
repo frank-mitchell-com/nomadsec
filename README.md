@@ -18,7 +18,9 @@ pip install namemaker
 
 ```
 usage: nomadsec.py [-h] [-n NAMELIST] [-x WIDTH] [-y HEIGHT] [-d {1,2,3,4,5}]
-                   [-l LENGTH]
+                   [-s {core,settled,conflict,frontier,unexplored}]
+                   [-t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}] [-l LENGTH]
+                   [-o OUTPUT]
 
 Generate a sector for the _FTL: Nomad_ RPG
 
@@ -32,8 +34,14 @@ options:
                         number of hexes/parsecs down
   -d {1,2,3,4,5}, --density {1,2,3,4,5}
                         density of stars (n in 6)
+  -s {core,settled,conflict,frontier,unexplored}, --settlement {core,settled,conflict,frontier,unexplored}
+                        settlement level of sector
+  -t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}, --tech {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}
+                        technology age of sector
   -l LENGTH, --length LENGTH
                         maximum length of star names
+  -o OUTPUT, --output OUTPUT
+                        output file
 ```
 
 The helper program `namegen` has the following syntax.
@@ -90,17 +98,6 @@ See the `grammar/*-grammar.json` files in this directory.
 
 - Make installable.
 
-- Generate _Nomad_ planets?
-  - Distinguish stars and planets?
-  - Inputs:
-    - Settlement Level (if not random)
-    - Prevailing Technology Age
-  - Outputs:
-    - Trade Class (random, modified by Settlement Level)
-    - Physical Characteristic (fn of Trade Class & random roll)
-    - Population (fn of Trade Class and random roll)
-    - Technology Age (fn of Prevailing if given & random roll)
-    - World Tag 1 (random)
-    - World Tag 2 (random)
+- Distinguish stars and planets?
 
 - Generate _Traveller_-compatible data files.
