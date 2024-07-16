@@ -543,27 +543,30 @@ def main() -> None:
     #      need to generate or fake UPPs etc.
 
     # Print out the list of stars
-    print(f"# width={args.width} height={args.height} density={args.density}")
-    print(f"# settlement={args.settlement} tech={args.tech}")
-    print(f"# stars={len(stars)}")
-    print(
-        f"#{'Planet':{args.length}s} Hex Trade Class      Charactr. "
-        "     Population Tech. Age          World Tags"
-    )
-    print(
-        f"#{'-'*(args.length-1)} ---- ---------------- ----------"
-        " -------------- ------------------ ------------------------------"
-    )
-    for s in stars:
-        print(
-            f"{s.name:{args.length}s}"
-            f" {s.width:02d}{s.height:02d}"
-            f" {trade_class_str(s.trade_class):16s}"
-            f" {s.characteristic:10s}"
-            f" {s.population:14_d}"
-            f" {tech_age_str(s.tech_age):18s}"
-            f" {s.world_tag_1}, {s.world_tag_2}"
+    with args.output as outfile:
+        outfile.write(
+            f"# width={args.width} height={args.height} density={args.density}\n"
         )
+        outfile.write(f"# settlement={args.settlement} tech={args.tech}\n")
+        outfile.write(f"# planets={len(stars)}\n")
+        outfile.write(
+            f"#{'Planet':{args.length}s} Hex Trade Class      Charactr. "
+            "     Population Tech. Age          World Tags\n"
+        )
+        outfile.write(
+            f"#{'-'*(args.length-1)} ---- ---------------- ----------"
+            " -------------- ------------------ ------------------------------\n"
+        )
+        for s in stars:
+            outfile.write(
+                f"{s.name:{args.length}s}"
+                f" {s.width:02d}{s.height:02d}"
+                f" {trade_class_str(s.trade_class):16s}"
+                f" {s.characteristic:10s}"
+                f" {s.population:14_d}"
+                f" {tech_age_str(s.tech_age):18s}"
+                f" {s.world_tag_1}, {s.world_tag_2}\n"
+            )
 
 
 if __name__ == "__main__":
