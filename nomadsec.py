@@ -2,6 +2,7 @@
 
 import argparse
 import itertools
+import json
 import random
 import string
 from collections.abc import Sequence
@@ -69,7 +70,7 @@ class Trade_Class(Enum):
     RICH = auto()
 
 
-TRADE_CLASS_SETTLED: dict[int, str] = {
+TRADE_CLASS_SETTLED: dict[int, Trade_Class] = {
     2: Trade_Class.GARDEN,
     3: Trade_Class.RESOURCE,
     4: Trade_Class.POOR,
@@ -83,7 +84,7 @@ TRADE_CLASS_SETTLED: dict[int, str] = {
     12: Trade_Class.INDUSTRIAL,
 }
 
-TRADE_CLASS_UNEXPLORED: dict[int, str] = {
+TRADE_CLASS_UNEXPLORED: dict[int, Trade_Class] = {
     2: Trade_Class.POOR,
     3: Trade_Class.GARDEN,
     4: Trade_Class.GARDEN,
@@ -367,7 +368,7 @@ WORLD_TAG_TABLE_2: list[list[str]] = [
 ####################### TABLE LOOKUPS #############################
 
 
-def trade_class(sector_type: str | None) -> str:
+def trade_class(sector_type: str | None) -> Trade_Class:
     result: int
     if sector_type == "unexplored":
         result = nomad_dice(2)
@@ -383,16 +384,20 @@ def trade_class(sector_type: str | None) -> str:
     return TRADE_CLASS_SETTLED[result]
 
 
-def trade_class_str(trade: Trade_Class) -> str:
+def trade_class_str(trade: Trade_Class | None) -> str:
+    if not trade:
+        return ""
     return string.capwords(trade.name.replace("_", " ")).replace(" ", "-")
 
 
-def characteristic(trade_class: str) -> Characteristic:
+def characteristic(trade_class: Trade_Class) -> Characteristic:
     assert trade_class in CHARACTERISTICS
     return CHARACTERISTICS[trade_class][one_die() - 1]
 
 
-def chara_str(c: Characteristic) -> str:
+def chara_str(c: Characteristic | None) -> str:
+    if not c:
+        return ""
     return c.name.capitalize()
 
 
@@ -421,7 +426,9 @@ def tech_age_offset(age: Tech_Age) -> Tech_Age:
     return TECHNOLOGY_AGES[index + offset]
 
 
-def tech_age_str(age: Tech_Age) -> str:
+def tech_age_str(age: Tech_Age | None) -> str:
+    if not age:
+        return ""
     return string.capwords(age.name.replace("_", " "))
 
 
@@ -462,7 +469,7 @@ def trim_str(name: str, length: int) -> str:
     return name[:length]
 
 
-def write_as_csv(outfile, stars: list[Star_Hex]) -> None:
+def write_as_csv(outfile, stars: Sequence[Star_Hex]) -> None:
     outfile.write(
         '"Planet","Hex","Trade Class","Chara.",'
         '"Population","Tech. Age","World Tag 1","World Tag 2"\n'
@@ -480,7 +487,7 @@ def write_as_csv(outfile, stars: list[Star_Hex]) -> None:
         )
 
 
-def write_as_xsv(outfile, stars: list[Star_Hex], sep: str = "\t") -> None:
+def write_as_xsv(outfile, stars: Sequence[Star_Hex], sep: str = "\t") -> None:
     outfile.write(
         f"Planet{sep}Hex{sep}Trade Class{sep}Chara.{sep}"
         f"Population{sep}Tech. Age{sep}World Tag 1{sep}World Tag 2\n"
@@ -498,7 +505,7 @@ def write_as_xsv(outfile, stars: list[Star_Hex], sep: str = "\t") -> None:
         )
 
 
-def write_as_text(outfile, args, stars: list[Star_Hex]) -> None:
+def write_as_text(outfile, args, stars: Sequence[Star_Hex]) -> None:
     outfile.write(f"# width={args.width} height={args.height} density={args.density}\n")
     outfile.write(f"# settlement={args.settlement} tech={args.tech}\n")
     outfile.write(f"# planets={len(stars)}\n")
@@ -520,6 +527,33 @@ def write_as_text(outfile, args, stars: list[Star_Hex]) -> None:
             f" {tech_age_str(s.tech_age):18s}"
             f" {s.world_tag_1}, {s.world_tag_2}\n"
         )
+
+
+class StarHexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Star_Hex):
+            s: Star_Hex = obj
+            return {
+                "name": s.name,
+                "hex": f"{s.width:02d}{s.height:02d}",
+                "trade_class": trade_class_str(s.trade_class),
+                "characteristic": chara_str(s.chara),
+                "population": s.population,
+                "technology_age": tech_age_str(s.tech_age),
+                "world_tags": [ s.world_tag_1, s.world_tag_2 ],
+            }
+        return json.JSONEncoder.default(self, obj)
+
+
+def write_as_json(outfile, args, stars: Sequence[Star_Hex]) -> None:
+    obj: dict = {
+            "x": args.start_width,
+            "y": args.start_height,
+            "width": args.width,
+            "height": args.height,
+            "planets": stars,
+    }
+    json.dump(obj, outfile, cls=StarHexEncoder, indent=4)
 
 
 def main() -> None:
@@ -599,6 +633,11 @@ def main() -> None:
         type=argparse.FileType(mode="w", encoding="UTF-8"),
     )
     parser.add_argument(
+        "-j", "--json",
+        help="write output as JSON",
+        action="store_true",
+    )
+    parser.add_argument(
         "--separator",
         help="write with the given character as a separator",
     )
@@ -655,7 +694,9 @@ def main() -> None:
 
     # Print out the list of stars
     with args.output as outfile:
-        if args.separator:
+        if args.json:
+            write_as_json(outfile, args, stars)
+        elif args.separator:
             if args.separator == ",":
                 write_as_csv(outfile, stars)
             else:

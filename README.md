@@ -1,10 +1,6 @@
 Programs to generate sector data for the RPG _Faster Than Light: Nomad_,
 available from DriveThruRPG.com or Lulu.com.
 
-As of this writing, the format is somewhat idiosyncratic.
-Conversion to <https://travellermap.com/make/poster> formats are for the
-future.
-
 ## Dependencies
 
 `nomadsec.py` depends on the `namemaker` library, which you can install like
@@ -20,10 +16,11 @@ pip install namemaker
 ### Usage
 
 ```
-usage: nomadsec.py [-h] [-n NAMELIST] [-x WIDTH] [-y HEIGHT] [-d {1,2,3,4,5}]
+usage: nomadsec.py [-h] [-n NAMELIST] [-W WIDTH] [-H HEIGHT] [-X START_WIDTH]
+                   [-Y START_HEIGHT] [-d {1,2,3,4,5}]
                    [-s {core,settled,conflict,frontier,unexplored}]
                    [-t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}] [-l LENGTH]
-                   [-o OUTPUT]
+                   [-o OUTPUT] [-j] [--separator SEPARATOR] [--csv] [--tsv]
 
 Generate a sector for the _FTL: Nomad_ RPG
 
@@ -31,10 +28,14 @@ options:
   -h, --help            show this help message and exit
   -n NAMELIST, --namelist NAMELIST
                         text file providing example names
-  -x WIDTH, --width WIDTH
+  -W WIDTH, --width WIDTH
                         number of hexes/parsecs across
-  -y HEIGHT, --height HEIGHT
+  -H HEIGHT, --height HEIGHT
                         number of hexes/parsecs down
+  -X START_WIDTH, --start-width START_WIDTH
+                        first index across
+  -Y START_HEIGHT, --start-height START_HEIGHT
+                        first index down
   -d {1,2,3,4,5}, --density {1,2,3,4,5}
                         density of stars (n in 6)
   -s {core,settled,conflict,frontier,unexplored}, --settlement {core,settled,conflict,frontier,unexplored}
@@ -45,12 +46,31 @@ options:
                         maximum length of star names
   -o OUTPUT, --output OUTPUT
                         output file
+  -j, --json            write output as JSON
+  --separator SEPARATOR
+                        write with the given character as a separator
+  --csv                 write as comma-separated values
+  --tsv                 write as tab-separated values
 ```
 
 `NAMELIST` is a simple UTF-8 text file with one sample name per line.
 You can use **`namegen.py`** below to generate one, or just get a list of
 names from the real-life language of your choice.  If no list is given,
 the name generator defaults to an internal list of Greek mythology names.
+
+`-X`, `-Y`, `-W`, and `-H` allow you to start your map indexes at any hex,
+and make them any size.  For example, you might want to create a full
+*Traveller*-style sector map, in which case you'd set `HEIGHT` to 40 and 
+`WIDTH` to 32.  Or maybe you want to do one "subsector" at a time, in which
+case you'd leave HEIGHT and WIDTH at their defaults (10 and 8 respectively)
+and set -X and -Y to combinations of (1, 9, 17, 22) &times; (1, 11, 21, 31).
+
+While the default output is a somewhat idiosyncratic fixed-width text file
+with some debugging comments thrown in, you can format the file as CSV,
+TSV, pipe-separated values (with `--separator "|"`), any other separator,
+*or* as a pretty-printed JSON document for easy consumption by some other
+program.  (For example, a program that turns the JSON into a *Traveller*
+format that could be fed to <https://travellermap.com/make/poster> ...?)
 
 
 ## `namegen.py`
@@ -116,7 +136,5 @@ See the `grammar/*-grammar.json` files in this directory.
   - Characteristic (maybe)
   - Population (in hundreds, thousands, millions, or billions)
   - Technology Age
-
-- Use `tabulate` to format table?
 
 - Generate _Traveller_-compatible data files.
