@@ -3,6 +3,7 @@
 import argparse
 import csv
 import json
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 # from unidecode import unidecode # must `pip install unidecode`
@@ -99,7 +100,7 @@ def write_genie(out, planets: Sequence[PlanetData]) -> None:
 
 
 def read_csv(infile, reader) -> Sequence[PlanetData]:
-    result = []
+    result: Sequence[PlanetData] = []
     for row in reader:
         data = PlanetData(
             row["Planet"],
@@ -115,6 +116,23 @@ def read_csv(infile, reader) -> Sequence[PlanetData]:
             result.append(data)
     return result
 
+
+def read_json(jsondata) -> Sequence[PlanetData]:
+    result: Sequence[PlanetData] = []
+    print("DEBUG", jsondata, file=sys.stderr)
+    for p in jsondata["planets"]:
+        print("DEBUG", p, file=sys.stderr)
+        data = PlanetData(
+                p["name"],
+                p["hex"],
+                p["trade_class"],
+                p["characteristic"],
+                int(p["population"]),
+                p["technology_age"],
+                p["world_tags"],
+        )
+        result.append(data)
+    return result
 
 def main() -> None:
     # Parse arguments
@@ -137,29 +155,14 @@ def main() -> None:
         help="read as JSON data",
         action="store_true",
     )
-    parser.add_argument(
-        "-c",
-        "--csv",
-        help="read as comma-separated values",
-        action="store_const",
-        dest="dialect",
-        const="excel",
-    )
-    parser.add_argument(
-        "-t",
-        "--tsv",
-        help="read as tab-separated values",
-        action="store_const",
-        dest="dialect",
-        const="excel_tab",
-    )
     args = parser.parse_args()
 
     planets: Sequence[PlanetData]
 
     with args.inputfile as infile:
         if args.json:
-            raise NotImplementedError
+            jsondata = json.load(infile)
+            planets = read_json(jsondata)
         else:
             dialect = csv.Sniffer().sniff(infile.read(1024))
             infile.seek(0)
