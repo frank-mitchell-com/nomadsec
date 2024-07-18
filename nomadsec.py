@@ -466,7 +466,7 @@ def sector(
 def write_as_csv(outfile, stars: Sequence[Star_Hex]) -> None:
     outfile.write(
         '"Planet","Hex","Trade Class","Chara.",'
-        '"Population","Tech. Age","World Tag 1","World Tag 2"\n'
+        '"Population","Tech. Age","World Tag 1","World Tag 2"\r\n'
     )
     for s in stars:
         outfile.write(
@@ -477,14 +477,14 @@ def write_as_csv(outfile, stars: Sequence[Star_Hex]) -> None:
             f",{s.population}"
             f',"{tech_age_str(s.tech_age)}"'
             f',"{s.world_tag_1}"'
-            f',"{s.world_tag_2}"\n'
+            f',"{s.world_tag_2}"\r\n'
         )
 
 
 def write_as_xsv(outfile, stars: Sequence[Star_Hex], sep: str = "\t") -> None:
     outfile.write(
         f"Planet{sep}Hex{sep}Trade Class{sep}Chara.{sep}"
-        f"Population{sep}Tech. Age{sep}World Tag 1{sep}World Tag 2\n"
+        f"Population{sep}Tech. Age{sep}World Tag 1{sep}World Tag 2\r\n"
     )
     for s in stars:
         outfile.write(
@@ -495,7 +495,7 @@ def write_as_xsv(outfile, stars: Sequence[Star_Hex], sep: str = "\t") -> None:
             f"{sep}{s.population}"
             f"{sep}{tech_age_str(s.tech_age)}"
             f"{sep}{s.world_tag_1}"
-            f"{sep}{s.world_tag_2}\n"
+            f"{sep}{s.world_tag_2}\r\n"
         )
 
 
