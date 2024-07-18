@@ -531,18 +531,18 @@ class StarHexEncoder(json.JSONEncoder):
                 "characteristic": chara_str(s.chara),
                 "population": s.population,
                 "technology_age": tech_age_str(s.tech_age),
-                "world_tags": [ s.world_tag_1, s.world_tag_2 ],
+                "world_tags": [s.world_tag_1, s.world_tag_2],
             }
         return json.JSONEncoder.default(self, obj)
 
 
 def write_as_json(outfile, args, stars: Sequence[Star_Hex]) -> None:
     obj: dict = {
-            "x": args.start_width,
-            "y": args.start_height,
-            "width": args.width,
-            "height": args.height,
-            "planets": stars,
+        "x": args.start_width,
+        "y": args.start_height,
+        "width": args.width,
+        "height": args.height,
+        "planets": stars,
     }
     json.dump(obj, outfile, cls=StarHexEncoder, indent=4)
 
@@ -627,7 +627,8 @@ def main() -> None:
         type=argparse.FileType(mode="w", encoding="UTF-8"),
     )
     parser.add_argument(
-        "-j", "--json",
+        "-j",
+        "--json",
         help="write output as JSON",
         action="store_true",
     )
