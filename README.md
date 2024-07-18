@@ -124,16 +124,46 @@ Each grammar specification is a single JSON Object with the following keys:
 See the `grammar/*-grammar.json` files in this directory.
 
 
+## `csv2trav.py`
+
+This script converts CSV data created by **`nomadsec.py`** into the
+GEnie format used by _Traveller_-based sector mapping applications such as
+format that could be fed to <https://travellermap.com/make/poster> ...?)
+
+```
+usage: csv2trav.py [-h] [-j] inputfile outputfile
+
+Parse `nomadsec.py` data into _Traveller_ GEnie format
+
+positional arguments:
+  inputfile   file containing `nomadsec.py` data
+  outputfile  file to contain _Traveller_ GEnie data
+
+options:
+  -h, --help  show this help message and exit
+  -j, --json  read as JSON data
+```
+
+Despite the name it can also read tab-separated values, pipe-separated values,
+or (with the `-j` flag) JSON data.  (It can't read the default format yet.)
+The output file can be dragged and dropped directly into Poster Maker's
+"sector data" text box, and you can make an accurate if boring map.
+
+> A future release will translate _Nomad_ parameters into passable numbers
+> for the GEnie format ... enough to distinguish asteroids from Earth-like
+> worlds, and maybe more.
+
+
 ## TODO
 
-- Add docstrings.
+- Generate **interesting** _Traveller_-compatible data files.
 
-- Make installable.
-
-- Generate "condensed" sector listing, using abbreviations for:
+- Generate "condensed" default text file, using abbreviations for:
   - Trade Class
   - Characteristic (maybe)
   - Population (in hundreds, thousands, millions, or billions)
   - Technology Age
 
-- Generate _Traveller_-compatible data files.
+- Add docstrings.
+
+- Make installable.
