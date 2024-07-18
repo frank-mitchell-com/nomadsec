@@ -5,6 +5,7 @@ import itertools
 import json
 import random
 import string
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -13,9 +14,6 @@ from enum import Enum, auto
 import namemaker
 
 ###################### CONSTANTS ###############################
-
-# default number of chars for star names
-DEFAULT_MAX_NAME_LENGTH: int = 13
 
 # coordinates are always f"{width:0d}{height:0d}"
 DEFAULT_SECTOR_HEIGHT: int = 10
@@ -465,10 +463,6 @@ def sector(
     return result
 
 
-def trim_str(name: str, length: int) -> str:
-    return name[:length]
-
-
 def write_as_csv(outfile, stars: Sequence[Star_Hex]) -> None:
     outfile.write(
         '"Planet","Hex","Trade Class","Chara.",'
@@ -505,27 +499,24 @@ def write_as_xsv(outfile, stars: Sequence[Star_Hex], sep: str = "\t") -> None:
         )
 
 
-def write_as_text(outfile, args, stars: Sequence[Star_Hex]) -> None:
-    outfile.write(f"# width={args.width} height={args.height} density={args.density}\n")
-    outfile.write(f"# settlement={args.settlement} tech={args.tech}\n")
-    outfile.write(f"# planets={len(stars)}\n")
+def write_as_text(outfile, stars: Sequence[Star_Hex], length: int) -> None:
     outfile.write(
-        f"#{'Planet':{args.length}s} Hex Trade Class      Chara.     "
-        "     Population Tech. Age          World Tags\n"
+        f"|{'Planet':{length}s}|Hex |Trade Class     |Chara.    "
+        "|    Population|Tech. Age         |World Tags\n"
     )
     outfile.write(
-        f"#{'-'*(args.length-1)} ---- ---------------- ----------"
-        " -------------- ------------------ ------------------------------\n"
+        f"|{'-'*(length)}|----|----------------|----------"
+        "|-------------:|------------------|------------------------------\n"
     )
     for s in stars:
         outfile.write(
-            f"{s.name:{args.length}s}"
-            f" {s.width:02d}{s.height:02d}"
-            f" {trade_class_str(s.trade_class):16s}"
-            f" {chara_str(s.chara):10s}"
-            f" {s.population:14_d}"
-            f" {tech_age_str(s.tech_age):18s}"
-            f" {s.world_tag_1}, {s.world_tag_2}\n"
+            f"|{s.name:{length}s}"
+            f"|{s.width:02d}{s.height:02d}"
+            f"|{trade_class_str(s.trade_class):16s}"
+            f"|{chara_str(s.chara):10s}"
+            f"|{s.population:14_d}"
+            f"|{tech_age_str(s.tech_age):18s}"
+            f"|{s.world_tag_1}, {s.world_tag_2}\n"
         )
 
 
@@ -554,6 +545,10 @@ def write_as_json(outfile, args, stars: Sequence[Star_Hex]) -> None:
             "planets": stars,
     }
     json.dump(obj, outfile, cls=StarHexEncoder, indent=4)
+
+
+def debug(*args, **kwargs) -> None:
+    print("DEBUG:", *args, file=sys.stderr, **kwargs)
 
 
 def main() -> None:
@@ -619,11 +614,10 @@ def main() -> None:
         choices=list(TECHNOLOGY_AGES_ABBREVS),
     )
     parser.add_argument(
-        "-l",
-        "--length",
-        help="maximum length of star names",
-        default=DEFAULT_MAX_NAME_LENGTH,
-        type=int,
+        "-D",
+        "--debug",
+        help="write debugging info to error stream",
+        action="store_true",
     )
     parser.add_argument(
         "-o",
@@ -657,6 +651,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    if args.debug:
+        debug(f"namelist={args.namelist}")
+        debug(f"x={args.start_width} y={args.start_height}")
+        debug(f"width={args.width} height={args.height}")
+        debug(f"density={args.density}")
+        debug(f"settlement={args.settlement}")
+        debug(f"tech={args.tech}")
+
     # initialize namemaker
     names = namemaker.make_name_set(args.namelist)
 
@@ -669,15 +671,17 @@ def main() -> None:
         y=args.start_height,
     )
 
+    length: int = 0
+
     for star in stars:
         # generate a name for the star / planet
-        star.name = trim_str(names.make_name(), args.length)
+        star.name = names.make_name()
+        length = max(length, len(star.name))
         # generate the trade type
         star.trade_class = trade_class(args.settlement)
         star.chara = characteristic(star.trade_class)
         star.population = population(star.trade_class, args.settlement)
         if star.population == 0:
-            # This isn't in the rules, but it makes sense to me
             star.tech_age = Tech_Age.NO_TECHNOLOGY  # No Technology
         elif args.tech:
             age: Tech_Age = TECHNOLOGY_AGES_ABBREVS[args.tech]
@@ -687,10 +691,9 @@ def main() -> None:
         star.world_tag_1 = world_tag(1)
         star.world_tag_2 = world_tag(2)
 
-    # TODO: Customize format:
-    #    - Default format, i.e. what's below.
-    #    - Traveller format: see <https://travellermap.com/doc/fileformats>;
-    #      need to generate or fake UPPs etc.
+    if args.debug:
+        debug(f"planets={len(stars)}")
+        debug(f"max_name_length={length}")
 
     # Print out the list of stars
     with args.output as outfile:
@@ -702,7 +705,7 @@ def main() -> None:
             else:
                 write_as_xsv(outfile, stars, args.separator)
         else:
-            write_as_text(outfile, args, stars)
+            write_as_text(outfile, stars, length)
 
 
 if __name__ == "__main__":

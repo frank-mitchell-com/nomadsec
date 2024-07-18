@@ -19,8 +19,8 @@ pip install namemaker
 usage: nomadsec.py [-h] [-n NAMELIST] [-W WIDTH] [-H HEIGHT] [-X START_WIDTH]
                    [-Y START_HEIGHT] [-d {1,2,3,4,5}]
                    [-s {core,settled,conflict,frontier,unexplored}]
-                   [-t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}] [-l LENGTH]
-                   [-o OUTPUT] [-j] [--separator SEPARATOR] [--csv] [--tsv]
+                   [-t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}] [-D] [-o OUTPUT]
+                   [-j] [--separator SEPARATOR] [--csv] [--tsv]
 
 Generate a sector for the _FTL: Nomad_ RPG
 
@@ -42,8 +42,7 @@ options:
                         settlement level of sector
   -t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}, --tech {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}
                         technology age of sector
-  -l LENGTH, --length LENGTH
-                        maximum length of star names
+  -D, --debug           write debugging info to error stream
   -o OUTPUT, --output OUTPUT
                         output file
   -j, --json            write output as JSON
@@ -65,9 +64,9 @@ and make them any size.  For example, you might want to create a full
 case you'd leave HEIGHT and WIDTH at their defaults (10 and 8 respectively)
 and set -X and -Y to combinations of (1, 9, 17, 22) &times; (1, 11, 21, 31).
 
-While the default output is a somewhat idiosyncratic fixed-width text file
-with some debugging comments thrown in, you can format the file as CSV,
-TSV, pipe-separated values (with `--separator "|"`), any other separator,
+The default output conforms to the default format for tables in some dialects
+of Markdown, but you can format the file as CSV, TSV (tab-separated values),
+pipe-separated values (with `--separator "|"`), any other separator,
 *or* as a pretty-printed JSON document for easy consumption by some other
 program.  (For example, a program that turns the JSON into a *Traveller*
 format that could be fed to <https://travellermap.com/make/poster> ...?)
