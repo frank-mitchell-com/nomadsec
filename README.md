@@ -128,7 +128,7 @@ See the `grammar/*-grammar.json` files in this directory.
 
 This script converts CSV data created by **`nomadsec.py`** into the
 GEnie format used by _Traveller_-based sector mapping applications such as
-format that could be fed to <https://travellermap.com/make/poster> ...?)
+<https://travellermap.com/make/poster>.
 
 ```
 usage: csv2trav.py [-h] [-j] inputfile outputfile
@@ -159,8 +159,6 @@ plain dots and names.
 
 
 ## TODO
-
-- Generate **interesting** _Traveller_-compatible data files.
 
 - Generate "condensed" default text file, using abbreviations for:
   - Trade Class
