@@ -149,9 +149,13 @@ or (with the `-j` flag) JSON data.  (It can't read the default format yet.)
 The output file can be dragged and dropped directly into Poster Maker's
 "sector data" text box, and you can make an accurate if boring map.
 
-> A future release will translate _Nomad_ parameters into passable numbers
-> for the GEnie format ... enough to distinguish asteroids from Earth-like
-> worlds, and maybe more.
+The script translates _Nomad_ parameters into passable numbers for the GEnie
+format: the Universal Planet Profile (UPP), trade codes, and PBG (population,
+bases, gas giants).  It also generates zone restrictions based on certain
+_Nomad_ World Tags.  The translation is far from perfect: _Nomad_ has no
+equivalent to "Scout Bases" or "Naval Bases", for example.  Still, it should
+make a map from <https://travellermap.com/make/poster> more interesting than
+plain dots and names.
 
 
 ## TODO
