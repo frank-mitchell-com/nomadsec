@@ -31,7 +31,7 @@ def one_die() -> int:
     return random.randint(1, 6)
 
 
-def nomad_dice(nkeep: int = 2, nadv: int = 0, disadvantage=True) -> int:
+def nomad_dice(nkeep: int = 2, nadv: int = 0, disadvantage=False) -> int:
     """
     Roll `nkeep` + abs(`nadv`) 6-sided dice;
     if nadv is negative, keep the `nkeep`
