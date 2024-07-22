@@ -491,8 +491,8 @@ def tech_age() -> Tech_Age:
 def tech_age_offset(age: Tech_Age) -> Tech_Age:
     offset: int = TECHNOLOGY_AGES_OFFSET_TABLE[nomad_dice(2)]
     index: int = age.value
-    if index + offset < 0:
-        return Tech_Age.NO_TECHNOLOGY
+    if index + offset < Tech_Age.EARLY_PRIMITIVE.value:
+        return Tech_Age.EARLY_PRIMITIVE
     if index + offset > Tech_Age.LATE_GALACTIC.value:
         return Tech_Age.LATE_GALACTIC
     return TECHNOLOGY_AGES[index + offset]
