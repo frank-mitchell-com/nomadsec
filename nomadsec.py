@@ -493,8 +493,8 @@ def tech_age_offset(age: Tech_Age) -> Tech_Age:
     index: int = age.value
     if index + offset < 0:
         return Tech_Age.NO_TECHNOLOGY
-    if index + offset > len(Tech_Age):
-        return Tech_Age.COSMIC
+    if index + offset > Tech_Age.LATE_GALACTIC.value:
+        return Tech_Age.LATE_GALACTIC
     return TECHNOLOGY_AGES[index + offset]
 
 
