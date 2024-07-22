@@ -20,7 +20,7 @@ usage: nomadsec.py [-h] [-n NAMELIST] [-W WIDTH] [-H HEIGHT] [-X START_WIDTH]
                    [-Y START_HEIGHT] [-d {1,2,3,4,5}]
                    [-s {core,settled,conflict,frontier,unexplored}]
                    [-t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}] [-D] [-o OUTPUT]
-                   [-j] [--separator SEPARATOR] [--csv] [--tsv]
+                   [-a] [-j] [--separator SEPARATOR] [--csv] [--tsv]
 
 Generate a sector for the _FTL: Nomad_ RPG
 
@@ -45,6 +45,7 @@ options:
   -D, --debug           write debugging info to error stream
   -o OUTPUT, --output OUTPUT
                         output file
+  -a, --abbreviate      abbreviate common strings in default format
   -j, --json            write output as JSON
   --separator SEPARATOR
                         write with the given character as a separator
@@ -159,12 +160,6 @@ plain dots and names.
 
 
 ## TODO
-
-- Generate "condensed" default text file, using abbreviations for:
-  - Trade Class
-  - Characteristic (maybe)
-  - Population (in hundreds, thousands, millions, or billions)
-  - Technology Age
 
 - Add docstrings.
 
