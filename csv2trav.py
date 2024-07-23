@@ -323,7 +323,7 @@ def read_csv(infile, reader) -> Sequence[PlanetData]:
             row["Chara."],
             int(row["Population"]),
             row["Tech. Age"],
-            {row["World Tag 1"], row["World Tag 1"]},
+            {row["World Tag 1"], row["World Tag 2"]},
         )
 
         if data.name[0] != "-" and data.loc[0] != "-":
