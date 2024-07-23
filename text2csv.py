@@ -8,6 +8,7 @@ TRADE_CLASS_COL: int = 3
 CHARACTERISTIC_COL: int = 4
 POPULATION_COL: int = 5
 TECHNOLOGY_AGE_COL: int = 6
+WORLD_TAGS_COL: int = 7
 
 
 HEADER: list[str] = [
@@ -35,7 +36,7 @@ TRADE_CLASS_ABBREVS: dict[str, str] = {
 
 
 CHARACTERISTIC_ABBREVS: dict[str, str] = {
-    "As": "Asteroid", 
+    "As": "Asteroid",
     "Co": "Corrosive",
     "De": "Desert",
     "Ic": "Iceball",
@@ -66,18 +67,25 @@ TECHNOLOGY_AGE_ABBREVS: dict[str, str] = {
 }
 
 
+def unabbrev_pop(row: list[str | int], col: int) -> None:
+    pop: str = row[col]
+    pop = (
+        pop.replace("_", "")
+        .replace(",", "")
+        .replace("K", "000")
+        .replace("M", "000000")
+        .replace("B", "000000000")
+    )
+    row[col] = int(pop)
 
-def unabbrev_pop(row: list[str], col: int) -> None:
-    row[col] = row[col].replace("_", "")
-    row[col] = row[col].replace("K", "000")
-    row[col] = row[col].replace("M", "000000")
-    row[col] = row[col].replace("B", "000000000")
-    row[col] = row[col].replace("T", "000000000000")
 
-
-def unabbrev(row: list[str], col: int, abbrevs: dict[str, str]) -> None:
+def unabbrev(row: list[str | int], col: int, abbrevs: dict[str, str]) -> None:
     if row[col] in abbrevs:
         row[col] = abbrevs[row[col]]
+
+
+def split_tags(row: list[str | int], col) -> None:
+    row[col:col+1] = re.split(r"\s*,\s*", row[col])
 
 
 def main() -> None:
@@ -97,16 +105,17 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    csvdata: list[list[str]] = []
+    csvdata: list[list[str | int]] = []
 
     with args.inputfile as infile:
         for line in infile.readlines():
-            cels: list[str] = re.split(r"\s*[|,]\s*", line.rstrip())
-            if not cels[1][0] == '-' and not cels[1] == "Planet":
+            cels: list[str | int] = re.split(r"\s*\|\s*", line.rstrip())
+            if not cels[1][0] == "-" and not cels[1] == "Planet":
                 unabbrev(cels, TRADE_CLASS_COL, TRADE_CLASS_ABBREVS)
                 unabbrev(cels, CHARACTERISTIC_COL, CHARACTERISTIC_ABBREVS)
                 unabbrev(cels, TECHNOLOGY_AGE_COL, TECHNOLOGY_AGE_ABBREVS)
                 unabbrev_pop(cels, POPULATION_COL)
+                split_tags(cels, WORLD_TAGS_COL)
                 csvdata.append(cels[1:])
 
     with args.outputfile as outfile:
