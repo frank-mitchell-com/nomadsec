@@ -67,7 +67,7 @@ TECHNOLOGY_AGE_ABBREVS: dict[str, str] = {
 }
 
 
-def unabbrev_pop(row: list[str | int], col: int) -> None:
+def unabbrev_pop(row: list[str], col: int) -> None:
     pop: str = row[col]
     pop = (
         pop.replace("_", "")
@@ -76,16 +76,16 @@ def unabbrev_pop(row: list[str | int], col: int) -> None:
         .replace("M", "000000")
         .replace("B", "000000000")
     )
-    row[col] = int(pop)
+    row[col] = str(int(pop))
 
 
-def unabbrev(row: list[str | int], col: int, abbrevs: dict[str, str]) -> None:
+def unabbrev(row: list[str], col: int, abbrevs: dict[str, str]) -> None:
     if row[col] in abbrevs:
         row[col] = abbrevs[row[col]]
 
 
-def split_tags(row: list[str | int], col) -> None:
-    row[col:col+1] = re.split(r"\s*,\s*", row[col])
+def split_tags(row: list[str], col) -> None:
+    row[col : col + 1] = re.split(r"\s*,\s*", row[col])
 
 
 def main() -> None:
@@ -105,11 +105,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    csvdata: list[list[str | int]] = []
+    csvdata: list[list[str]] = []
 
     with args.inputfile as infile:
         for line in infile.readlines():
-            cels: list[str | int] = re.split(r"\s*\|\s*", line.rstrip())
+            cels: list[str] = re.split(r"\s*\|\s*", line.rstrip())
             if not cels[1][0] == "-" and not cels[1] == "Planet":
                 unabbrev(cels, TRADE_CLASS_COL, TRADE_CLASS_ABBREVS)
                 unabbrev(cels, CHARACTERISTIC_COL, CHARACTERISTIC_ABBREVS)

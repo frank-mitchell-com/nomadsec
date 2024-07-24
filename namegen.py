@@ -53,7 +53,7 @@ class SimpleNameSource:
 
         name_seq.append(random.choice(self._initial))
         name_seq.append(random.choice(self._vowels))
-        for i in range(1, nsyllables):
+        for _ in range(1, nsyllables):
             name_seq.append(random.choice(self._medial))
             name_seq.append(random.choice(self._vowels))
         name_seq.append(random.choice(self._final))

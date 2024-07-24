@@ -57,7 +57,7 @@ SETTLEMENT_TYPES: list[str] = [
 ]
 
 
-class Trade_Class(Enum):
+class TradeClass(Enum):
     AGRICULTURAL = auto()
     GARDEN = auto()
     INDUSTRIAL = auto()
@@ -68,45 +68,45 @@ class Trade_Class(Enum):
     RICH = auto()
 
 
-TRADE_CLASS_TO_ABBREVS: dict[Trade_Class, str] = {
-    Trade_Class.AGRICULTURAL: "Ag",
-    Trade_Class.GARDEN: "Ga",
-    Trade_Class.INDUSTRIAL: "In",
-    Trade_Class.NON_AGRICULTURAL: "Na",
-    Trade_Class.NON_INDUSTRIAL: "Ni",
-    Trade_Class.POOR: "Po",
-    Trade_Class.RESOURCE: "Re",
-    Trade_Class.RICH: "Ri",
+TRADE_CLASS_TO_ABBREVS: dict[TradeClass, str] = {
+    TradeClass.AGRICULTURAL: "Ag",
+    TradeClass.GARDEN: "Ga",
+    TradeClass.INDUSTRIAL: "In",
+    TradeClass.NON_AGRICULTURAL: "Na",
+    TradeClass.NON_INDUSTRIAL: "Ni",
+    TradeClass.POOR: "Po",
+    TradeClass.RESOURCE: "Re",
+    TradeClass.RICH: "Ri",
 }
 
 
-TRADE_CLASS_SETTLED: dict[int, Trade_Class] = {
-    2: Trade_Class.GARDEN,
-    3: Trade_Class.RESOURCE,
-    4: Trade_Class.POOR,
-    5: Trade_Class.POOR,
-    6: Trade_Class.NON_AGRICULTURAL,
-    7: Trade_Class.NON_INDUSTRIAL,
-    8: Trade_Class.AGRICULTURAL,
-    9: Trade_Class.AGRICULTURAL,
-    10: Trade_Class.RICH,
-    11: Trade_Class.RICH,
-    12: Trade_Class.INDUSTRIAL,
+TRADE_CLASS_SETTLED: dict[int, TradeClass] = {
+    2: TradeClass.GARDEN,
+    3: TradeClass.RESOURCE,
+    4: TradeClass.POOR,
+    5: TradeClass.POOR,
+    6: TradeClass.NON_AGRICULTURAL,
+    7: TradeClass.NON_INDUSTRIAL,
+    8: TradeClass.AGRICULTURAL,
+    9: TradeClass.AGRICULTURAL,
+    10: TradeClass.RICH,
+    11: TradeClass.RICH,
+    12: TradeClass.INDUSTRIAL,
 }
 
 
-TRADE_CLASS_UNEXPLORED: dict[int, Trade_Class] = {
-    2: Trade_Class.POOR,
-    3: Trade_Class.GARDEN,
-    4: Trade_Class.GARDEN,
-    5: Trade_Class.GARDEN,
-    6: Trade_Class.RESOURCE,
-    7: Trade_Class.RESOURCE,
-    8: Trade_Class.POOR,
-    9: Trade_Class.POOR,
-    10: Trade_Class.POOR,
-    11: Trade_Class.POOR,
-    12: Trade_Class.POOR,
+TRADE_CLASS_UNEXPLORED: dict[int, TradeClass] = {
+    2: TradeClass.POOR,
+    3: TradeClass.GARDEN,
+    4: TradeClass.GARDEN,
+    5: TradeClass.GARDEN,
+    6: TradeClass.RESOURCE,
+    7: TradeClass.RESOURCE,
+    8: TradeClass.POOR,
+    9: TradeClass.POOR,
+    10: TradeClass.POOR,
+    11: TradeClass.POOR,
+    12: TradeClass.POOR,
 }
 
 
@@ -125,7 +125,7 @@ class Characteristic(Enum):
 
 
 CHARACTERISTICS_TO_ABBREVS: dict[Characteristic, str] = {
-    Characteristic.ASTEROID: "As", 
+    Characteristic.ASTEROID: "As",
     Characteristic.CORROSIVE: "Co",
     Characteristic.DESERT: "De",
     Characteristic.ICEBALL: "Ic",
@@ -139,8 +139,8 @@ CHARACTERISTICS_TO_ABBREVS: dict[Characteristic, str] = {
 }
 
 
-CHARACTERISTICS: dict[Trade_Class, list[Characteristic]] = {
-    Trade_Class.AGRICULTURAL: [
+CHARACTERISTICS: dict[TradeClass, list[Characteristic]] = {
+    TradeClass.AGRICULTURAL: [
         Characteristic.PRIME,
         Characteristic.PRIME,
         Characteristic.TAINTED,
@@ -148,7 +148,7 @@ CHARACTERISTICS: dict[Trade_Class, list[Characteristic]] = {
         Characteristic.MARGINAL,
         Characteristic.OCEAN,
     ],
-    Trade_Class.GARDEN: [
+    TradeClass.GARDEN: [
         Characteristic.PRIME,
         Characteristic.TAINTED,
         Characteristic.MARGINAL,
@@ -156,7 +156,7 @@ CHARACTERISTICS: dict[Trade_Class, list[Characteristic]] = {
         Characteristic.DESERT,
         Characteristic.PRIMORDIAL,
     ],
-    Trade_Class.INDUSTRIAL: [
+    TradeClass.INDUSTRIAL: [
         Characteristic.ASTEROID,
         Characteristic.ROCKBALL,
         Characteristic.MARGINAL,
@@ -164,39 +164,39 @@ CHARACTERISTICS: dict[Trade_Class, list[Characteristic]] = {
         Characteristic.TAINTED,
         Characteristic.ICEBALL,
     ],
-    Trade_Class.NON_AGRICULTURAL: [
+    TradeClass.NON_AGRICULTURAL: [
         Characteristic.ASTEROID,
         Characteristic.ROCKBALL,
         Characteristic.ICEBALL,
-        Characteristic.MARGINAL,
-        Characteristic.TAINTED,
-        Characteristic.INERT,
-    ],
-    Trade_Class.NON_INDUSTRIAL: [
-        Characteristic.ASTEROID,
-        Characteristic.ROCKBALL,
-        Characteristic.ROCKBALL,
         Characteristic.MARGINAL,
         Characteristic.TAINTED,
         Characteristic.INERT,
     ],
-    Trade_Class.POOR: [
-        Characteristic.ROCKBALL,
-        Characteristic.ROCKBALL,
-        Characteristic.ICEBALL,
-        Characteristic.ASTEROID,
-        Characteristic.INERT,
-        Characteristic.CORROSIVE,
-    ],
-    Trade_Class.RESOURCE: [
+    TradeClass.NON_INDUSTRIAL: [
         Characteristic.ASTEROID,
         Characteristic.ROCKBALL,
-        Characteristic.ICEBALL,
+        Characteristic.ROCKBALL,
         Characteristic.MARGINAL,
+        Characteristic.TAINTED,
+        Characteristic.INERT,
+    ],
+    TradeClass.POOR: [
+        Characteristic.ROCKBALL,
+        Characteristic.ROCKBALL,
+        Characteristic.ICEBALL,
+        Characteristic.ASTEROID,
         Characteristic.INERT,
         Characteristic.CORROSIVE,
     ],
-    Trade_Class.RICH: [
+    TradeClass.RESOURCE: [
+        Characteristic.ASTEROID,
+        Characteristic.ROCKBALL,
+        Characteristic.ICEBALL,
+        Characteristic.MARGINAL,
+        Characteristic.INERT,
+        Characteristic.CORROSIVE,
+    ],
+    TradeClass.RICH: [
         Characteristic.PRIME,
         Characteristic.PRIME,
         Characteristic.TAINTED,
@@ -208,25 +208,25 @@ CHARACTERISTICS: dict[Trade_Class, list[Characteristic]] = {
 
 
 @dataclass
-class Population_Spec:
+class PopulationSpec:
     ndice: int
     modifier: int
     multiplier: int
 
 
-POPULATION: dict[Trade_Class, Population_Spec] = {
-    Trade_Class.AGRICULTURAL: Population_Spec(1, 0, 50_000_000),
-    Trade_Class.GARDEN: Population_Spec(0, 0, 0),
-    Trade_Class.INDUSTRIAL: Population_Spec(2, 0, 500_000_000),
-    Trade_Class.NON_AGRICULTURAL: Population_Spec(1, 0, 200_000_000),
-    Trade_Class.NON_INDUSTRIAL: Population_Spec(2, 0, 50_000),
-    Trade_Class.POOR: Population_Spec(2, -8, 500),  # none if unexplored
-    Trade_Class.RESOURCE: Population_Spec(0, 0, 0),
-    Trade_Class.RICH: Population_Spec(4, 0, 100_000_000),
+POPULATION: dict[TradeClass, PopulationSpec] = {
+    TradeClass.AGRICULTURAL: PopulationSpec(1, 0, 50_000_000),
+    TradeClass.GARDEN: PopulationSpec(0, 0, 0),
+    TradeClass.INDUSTRIAL: PopulationSpec(2, 0, 500_000_000),
+    TradeClass.NON_AGRICULTURAL: PopulationSpec(1, 0, 200_000_000),
+    TradeClass.NON_INDUSTRIAL: PopulationSpec(2, 0, 50_000),
+    TradeClass.POOR: PopulationSpec(2, -8, 500),  # none if unexplored
+    TradeClass.RESOURCE: PopulationSpec(0, 0, 0),
+    TradeClass.RICH: PopulationSpec(4, 0, 100_000_000),
 }
 
 
-class Tech_Age(Enum):
+class TechAge(Enum):
     NO_TECHNOLOGY = 0
     EARLY_PRIMITIVE = 1
     LATE_PRIMITIVE = 2
@@ -243,55 +243,55 @@ class Tech_Age(Enum):
     COSMIC = 13
 
 
-TECHNOLOGY_AGES: list[Tech_Age] = list(Tech_Age)
+TECHNOLOGY_AGES: list[TechAge] = list(TechAge)
 
 
-TECHNOLOGY_AGES_ABBREVS: dict[str, Tech_Age] = {
-    "ep": Tech_Age.EARLY_PRIMITIVE,
-    "lp": Tech_Age.LATE_PRIMITIVE,
-    "em": Tech_Age.EARLY_MECHANICAL,
-    "lm": Tech_Age.LATE_MECHANICAL,
-    "ea": Tech_Age.EARLY_ATOMIC,
-    "la": Tech_Age.LATE_ATOMIC,
-    "es": Tech_Age.EARLY_SPACE,
-    "ls": Tech_Age.LATE_SPACE,
-    "ei": Tech_Age.EARLY_INTERSTELLAR,
-    "li": Tech_Age.LATE_INTERSTELLAR,
-    "eg": Tech_Age.EARLY_GALACTIC,
-    "lg": Tech_Age.LATE_GALACTIC,
+TECHNOLOGY_AGES_ABBREVS: dict[str, TechAge] = {
+    "ep": TechAge.EARLY_PRIMITIVE,
+    "lp": TechAge.LATE_PRIMITIVE,
+    "em": TechAge.EARLY_MECHANICAL,
+    "lm": TechAge.LATE_MECHANICAL,
+    "ea": TechAge.EARLY_ATOMIC,
+    "la": TechAge.LATE_ATOMIC,
+    "es": TechAge.EARLY_SPACE,
+    "ls": TechAge.LATE_SPACE,
+    "ei": TechAge.EARLY_INTERSTELLAR,
+    "li": TechAge.LATE_INTERSTELLAR,
+    "eg": TechAge.EARLY_GALACTIC,
+    "lg": TechAge.LATE_GALACTIC,
 }
 
 
-TECHNOLOGY_AGES_TO_ABBREVS: dict[Tech_Age, str] = {
-    Tech_Age.NO_TECHNOLOGY: "NT",
-    Tech_Age.EARLY_PRIMITIVE: "EP",
-    Tech_Age.LATE_PRIMITIVE: "LP",
-    Tech_Age.EARLY_MECHANICAL: "EM",
-    Tech_Age.LATE_MECHANICAL: "LM",
-    Tech_Age.EARLY_ATOMIC: "EA",
-    Tech_Age.LATE_ATOMIC: "LA",
-    Tech_Age.EARLY_SPACE: "ES",
-    Tech_Age.LATE_SPACE: "LS",
-    Tech_Age.EARLY_INTERSTELLAR: "EI",
-    Tech_Age.LATE_INTERSTELLAR: "LI",
-    Tech_Age.EARLY_GALACTIC: "EG",
-    Tech_Age.LATE_GALACTIC: "LG",
-    Tech_Age.COSMIC: "C",
+TECHNOLOGY_AGES_TO_ABBREVS: dict[TechAge, str] = {
+    TechAge.NO_TECHNOLOGY: "NT",
+    TechAge.EARLY_PRIMITIVE: "EP",
+    TechAge.LATE_PRIMITIVE: "LP",
+    TechAge.EARLY_MECHANICAL: "EM",
+    TechAge.LATE_MECHANICAL: "LM",
+    TechAge.EARLY_ATOMIC: "EA",
+    TechAge.LATE_ATOMIC: "LA",
+    TechAge.EARLY_SPACE: "ES",
+    TechAge.LATE_SPACE: "LS",
+    TechAge.EARLY_INTERSTELLAR: "EI",
+    TechAge.LATE_INTERSTELLAR: "LI",
+    TechAge.EARLY_GALACTIC: "EG",
+    TechAge.LATE_GALACTIC: "LG",
+    TechAge.COSMIC: "C",
 }
 
 
-TECHNOLOGY_AGES_TABLE: dict[int, Tech_Age] = {
-    2: Tech_Age.EARLY_PRIMITIVE,
-    3: Tech_Age.LATE_PRIMITIVE,
-    4: Tech_Age.LATE_MECHANICAL,
-    5: Tech_Age.LATE_ATOMIC,
-    6: Tech_Age.EARLY_SPACE,
-    7: Tech_Age.LATE_SPACE,
-    8: Tech_Age.EARLY_INTERSTELLAR,
-    9: Tech_Age.LATE_INTERSTELLAR,
-    10: Tech_Age.EARLY_INTERSTELLAR,  # (sic)
-    11: Tech_Age.EARLY_GALACTIC,
-    12: Tech_Age.LATE_GALACTIC,
+TECHNOLOGY_AGES_TABLE: dict[int, TechAge] = {
+    2: TechAge.EARLY_PRIMITIVE,
+    3: TechAge.LATE_PRIMITIVE,
+    4: TechAge.LATE_MECHANICAL,
+    5: TechAge.LATE_ATOMIC,
+    6: TechAge.EARLY_SPACE,
+    7: TechAge.LATE_SPACE,
+    8: TechAge.EARLY_INTERSTELLAR,
+    9: TechAge.LATE_INTERSTELLAR,
+    10: TechAge.EARLY_INTERSTELLAR,  # (sic)
+    11: TechAge.EARLY_GALACTIC,
+    12: TechAge.LATE_GALACTIC,
 }
 
 
@@ -416,7 +416,7 @@ WORLD_TAG_TABLE_2: list[list[str]] = [
 ####################### TABLE LOOKUPS #############################
 
 
-def trade_class(sector_type: str | None) -> Trade_Class:
+def trade_class(sector_type: str | None) -> TradeClass:
     result: int
     if sector_type == "unexplored":
         result = nomad_dice(2)
@@ -432,21 +432,21 @@ def trade_class(sector_type: str | None) -> Trade_Class:
     return TRADE_CLASS_SETTLED[result]
 
 
-def trade_class_str(trade: Trade_Class | None) -> str:
+def trade_class_str(trade: TradeClass | None) -> str:
     if not trade:
         return ""
     return string.capwords(trade.name.replace("_", " ")).replace(" ", "-")
 
 
-def trade_class_abbrev(trade: Trade_Class | None) -> str:
+def trade_class_abbrev(trade: TradeClass | None) -> str:
     if not trade:
         return ""
     return TRADE_CLASS_TO_ABBREVS[trade]
 
 
-def characteristic(trade_class: Trade_Class) -> Characteristic:
-    assert trade_class in CHARACTERISTICS
-    return CHARACTERISTICS[trade_class][one_die() - 1]
+def characteristic(tc: TradeClass) -> Characteristic:
+    assert tc in CHARACTERISTICS
+    return CHARACTERISTICS[tc][one_die() - 1]
 
 
 def chara_str(c: Characteristic | None) -> str:
@@ -461,11 +461,11 @@ def chara_abbrev(c: Characteristic | None) -> str:
     return CHARACTERISTICS_TO_ABBREVS[c]
 
 
-def population(trade_class: Trade_Class, settlement: str) -> int:
-    if trade_class == Trade_Class.POOR and settlement == "unexplored":
+def population(tc: TradeClass, settlement: str) -> int:
+    if tc == TradeClass.POOR and settlement == "unexplored":
         return 0
-    assert trade_class in POPULATION
-    popspec: Population_Spec = POPULATION[trade_class]
+    assert tc in POPULATION
+    popspec: PopulationSpec = POPULATION[tc]
     pop: int = (nomad_dice(popspec.ndice) + popspec.modifier) * popspec.multiplier
     if pop < 0:
         return 0
@@ -484,33 +484,33 @@ def population_abbrev(pop: int) -> str:
     return f"{pop:6d}"
 
 
-def tech_age() -> Tech_Age:
+def tech_age() -> TechAge:
     return TECHNOLOGY_AGES_TABLE[nomad_dice(2)]
 
 
-def tech_age_offset(age: Tech_Age) -> Tech_Age:
+def tech_age_offset(age: TechAge) -> TechAge:
     offset: int = TECHNOLOGY_AGES_OFFSET_TABLE[nomad_dice(2)]
     index: int = age.value
-    if index + offset < Tech_Age.EARLY_PRIMITIVE.value:
-        return Tech_Age.EARLY_PRIMITIVE
-    if index + offset > Tech_Age.LATE_GALACTIC.value:
-        return Tech_Age.LATE_GALACTIC
+    if index + offset < TechAge.EARLY_PRIMITIVE.value:
+        return TechAge.EARLY_PRIMITIVE
+    if index + offset > TechAge.LATE_GALACTIC.value:
+        return TechAge.LATE_GALACTIC
     return TECHNOLOGY_AGES[index + offset]
 
 
-def tech_age_str(age: Tech_Age | None) -> str:
+def tech_age_str(age: TechAge | None) -> str:
     if not age:
         return ""
     return string.capwords(age.name.replace("_", " "))
 
 
-def tech_age_abbrev(age: Tech_Age | None) -> str:
+def tech_age_abbrev(age: TechAge | None) -> str:
     if not age:
         return ""
     return TECHNOLOGY_AGES_TO_ABBREVS[age]
 
 
-def str_to_tech_age(agestr: str | None) -> Tech_Age | None:
+def str_to_tech_age(agestr: str | None) -> TechAge | None:
     if agestr and agestr in TECHNOLOGY_AGES_ABBREVS:
         return TECHNOLOGY_AGES_ABBREVS[agestr]
     return None
@@ -526,30 +526,30 @@ def world_tag(index: int = 1) -> str:
 
 
 @dataclass
-class Star_Hex:
+class StarHex:
     width: int
     height: int
     name: str
-    trade_class: Trade_Class | None
+    trade_class: TradeClass | None
     chara: Characteristic | None
     population: int
-    tech_age: Tech_Age | None
+    tech_age: TechAge | None
     world_tag_1: str
     world_tag_2: str
 
 
 def sector(
     width: int = 8, height: int = 10, density: int = 3, x: int = 1, y: int = 1
-) -> Sequence[Star_Hex]:
+) -> Sequence[StarHex]:
     # Generate a number of stars proportional to density
-    result: list[Star_Hex] = []
+    result: list[StarHex] = []
     for w, h in itertools.product(range(x, width + x), range(y, height + y)):
         if random.randint(MINIMUM_DENSITY, MAXIMUM_DENSITY) <= density:
-            result.append(Star_Hex(w, h, "", None, None, 0, None, "", ""))
+            result.append(StarHex(w, h, "", None, None, 0, None, "", ""))
     return result
 
 
-def write_as_csv(outfile, stars: Sequence[Star_Hex]) -> None:
+def write_as_csv(outfile, stars: Sequence[StarHex]) -> None:
     outfile.write(
         '"Planet","Hex","Trade Class","Chara.",'
         '"Population","Tech. Age","World Tag 1","World Tag 2"\r\n'
@@ -567,7 +567,7 @@ def write_as_csv(outfile, stars: Sequence[Star_Hex]) -> None:
         )
 
 
-def write_as_xsv(outfile, stars: Sequence[Star_Hex], sep: str = "\t") -> None:
+def write_as_xsv(outfile, stars: Sequence[StarHex], sep: str = "\t") -> None:
     outfile.write(
         f"Planet{sep}Hex{sep}Trade Class{sep}Chara.{sep}"
         f"Population{sep}Tech. Age{sep}World Tag 1{sep}World Tag 2\r\n"
@@ -585,7 +585,7 @@ def write_as_xsv(outfile, stars: Sequence[Star_Hex], sep: str = "\t") -> None:
         )
 
 
-def write_as_text(outfile, stars: Sequence[Star_Hex], length: int) -> None:
+def write_as_text(outfile, stars: Sequence[StarHex], length: int) -> None:
     outfile.write(
         f"|{'Planet':{length}s}|Hex |Trade Class     |Chara.    "
         "|    Population|Tech. Age         |World Tags\n"
@@ -606,13 +606,10 @@ def write_as_text(outfile, stars: Sequence[Star_Hex], length: int) -> None:
         )
 
 
-def write_as_short_text(outfile, stars: Sequence[Star_Hex], length: int) -> None:
+def write_as_short_text(outfile, stars: Sequence[StarHex], length: int) -> None:
+    outfile.write(f"|{'Planet':{length}s}|Hex |TC|Ch|    Population|TA|World Tags\n")
     outfile.write(
-        f"|{'Planet':{length}s}|Hex |TC|Ch|    Population|TA|World Tags\n"
-    )
-    outfile.write(
-        f"|{'-'*(length)}|----|--|--|-----:|--"
-        "|------------------------------\n"
+        f"|{'-'*(length)}|----|--|--|-----:|--" "|------------------------------\n"
     )
     for s in stars:
         outfile.write(
@@ -627,9 +624,9 @@ def write_as_short_text(outfile, stars: Sequence[Star_Hex], length: int) -> None
 
 
 class StarHexEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Star_Hex):
-            s: Star_Hex = obj
+    def default(self, o):
+        if isinstance(o, StarHex):
+            s: StarHex = o
             return {
                 "name": s.name,
                 "hex": f"{s.width:02d}{s.height:02d}",
@@ -639,10 +636,10 @@ class StarHexEncoder(json.JSONEncoder):
                 "technology_age": tech_age_str(s.tech_age),
                 "world_tags": [s.world_tag_1, s.world_tag_2],
             }
-        return json.JSONEncoder.default(self, obj)
+        return json.JSONEncoder.default(self, o)
 
 
-def write_as_json(outfile, args, stars: Sequence[Star_Hex]) -> None:
+def write_as_json(outfile, args, stars: Sequence[StarHex]) -> None:
     obj: dict = {
         "x": args.start_width,
         "y": args.start_height,
@@ -776,7 +773,7 @@ def main() -> None:
     names = namemaker.make_name_set(args.namelist)
 
     # generate a map of unnamed stars
-    stars: Sequence[Star_Hex] = sector(
+    stars: Sequence[StarHex] = sector(
         height=args.height,
         width=args.width,
         density=args.density,
@@ -785,7 +782,7 @@ def main() -> None:
     )
 
     length: int = 0
-    avg_age: Tech_Age = str_to_tech_age(args.tech)
+    avg_age: TechAge | None = str_to_tech_age(args.tech)
 
     for star in stars:
         # generate a name for the star / planet
@@ -796,7 +793,7 @@ def main() -> None:
         star.chara = characteristic(star.trade_class)
         star.population = population(star.trade_class, args.settlement)
         if star.population == 0:
-            star.tech_age = Tech_Age.NO_TECHNOLOGY  # No Technology
+            star.tech_age = TechAge.NO_TECHNOLOGY  # No Technology
         elif avg_age:
             star.tech_age = tech_age_offset(avg_age)
         else:

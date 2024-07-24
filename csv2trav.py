@@ -4,7 +4,6 @@ import argparse
 import csv
 import json
 import sys
-from collections.abc import Sequence
 from dataclasses import dataclass
 
 
@@ -193,14 +192,13 @@ def _starport_code(planet: PlanetData) -> str:
 
     if planet.population == 0 or tl <= TECH_LEVEL_STARPORT_X:
         return "X"
-    elif tcc == "Ni" or tl <= TECH_LEVEL_STARPORT_E:
+    if tcc == "Ni" or tl <= TECH_LEVEL_STARPORT_E:
         return "E"
-    elif tl <= TECH_LEVEL_STARPORT_D:
+    if tl <= TECH_LEVEL_STARPORT_D:
         return "D"
-    elif tl >= TECH_LEVEL_STARPORT_A:
+    if tl >= TECH_LEVEL_STARPORT_A:
         return "A" if tcc in {"Ag", "Ri", "In"} else "B"
-    else:
-        return "B" if tcc in {"Ag", "Ri", "In"} else "C"
+    return "B" if tcc in {"Ag", "Ri", "In"} else "C"
 
 
 def _size_code(planet: PlanetData) -> int:
@@ -250,7 +248,6 @@ def _law_level_code(planet: PlanetData) -> int:
 
 
 def _upp(planet: PlanetData) -> str:
-    buf: list[str] = []
     return (
         f"{_starport_code(planet)}"
         f"{_ehex(_size_code(planet))}"
@@ -304,7 +301,7 @@ def _pbg(planet: PlanetData) -> str:
     return f"{_ehex(popmul)}{_ehex(bases)}{_ehex(ggs)}"
 
 
-def write_genie(out, planets: Sequence[PlanetData]) -> None:
+def write_genie(out, planets: list[PlanetData]) -> None:
     out.write(GENIE_HEADER)
     for p in planets:
         out.write(
@@ -313,8 +310,8 @@ def write_genie(out, planets: Sequence[PlanetData]) -> None:
         )
 
 
-def read_csv(infile, reader) -> Sequence[PlanetData]:
-    result: Sequence[PlanetData] = []
+def read_csv(reader) -> list[PlanetData]:
+    result: list[PlanetData] = []
     for row in reader:
         data = PlanetData(
             row["Planet"],
@@ -331,8 +328,8 @@ def read_csv(infile, reader) -> Sequence[PlanetData]:
     return result
 
 
-def read_json(jsondata) -> Sequence[PlanetData]:
-    result: Sequence[PlanetData] = []
+def read_json(jsondata) -> list[PlanetData]:
+    result: list[PlanetData] = []
     print("DEBUG", jsondata, file=sys.stderr)
     for p in jsondata["planets"]:
         print("DEBUG", p, file=sys.stderr)
@@ -372,7 +369,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    planets: Sequence[PlanetData]
+    planets: list[PlanetData]
 
     with args.inputfile as infile:
         if args.json:
@@ -382,7 +379,7 @@ def main() -> None:
             dialect = csv.Sniffer().sniff(infile.read(1024))
             infile.seek(0)
             reader = csv.DictReader(infile, dialect=dialect)
-            planets = read_csv(infile, reader)
+            planets = read_csv(reader)
 
     with args.outputfile as outfile:
         write_genie(outfile, planets)
