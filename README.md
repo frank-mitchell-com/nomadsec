@@ -159,6 +159,28 @@ make a map from <https://travellermap.com/make/poster> more interesting than
 plain dots and names.
 
 
+## `text2csv.py`
+
+This script converts the default text format (or permutations thereof) into
+a CSV suitable for `csv2trav.py`:
+
+```
+usage: text2csv.py [-h] inputfile outputfile
+
+Parse `nomadsec.py` plain text data into a CSV
+
+positional arguments:
+  inputfile   file containing `nomadsec.py` default text
+  outputfile  file to contain CSV data
+
+options:
+  -h, --help  show this help message and exit
+```
+
+It cleans up most permutations of the pipe-delimited text file, but it still
+has some data it cannot clean up.
+
+
 ## TODO
 
 - Add docstrings.
