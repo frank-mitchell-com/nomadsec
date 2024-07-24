@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import argparse
+import csv
 import itertools
 import json
 import random
 import string
 import sys
-from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
 
@@ -484,7 +484,7 @@ def population_abbrev(pop: int) -> str:
     return f"{pop:6d}"
 
 
-def tech_age() -> TechAge:
+def tech_age_random() -> TechAge:
     return TECHNOLOGY_AGES_TABLE[nomad_dice(2)]
 
 
@@ -496,6 +496,14 @@ def tech_age_offset(age: TechAge) -> TechAge:
     if index + offset > TechAge.LATE_GALACTIC.value:
         return TechAge.LATE_GALACTIC
     return TECHNOLOGY_AGES[index + offset]
+
+
+def tech_age(pop: int, avg_age: TechAge | None = None) -> TechAge:
+    if pop == 0:
+        return TechAge.NO_TECHNOLOGY
+    if avg_age:
+        return tech_age_offset(avg_age)
+    return tech_age_random()
 
 
 def tech_age_str(age: TechAge | None) -> str:
@@ -540,7 +548,7 @@ class StarHex:
 
 def sector(
     width: int = 8, height: int = 10, density: int = 3, x: int = 1, y: int = 1
-) -> Sequence[StarHex]:
+) -> list[StarHex]:
     # Generate a number of stars proportional to density
     result: list[StarHex] = []
     for w, h in itertools.product(range(x, width + x), range(y, height + y)):
@@ -549,43 +557,38 @@ def sector(
     return result
 
 
-def write_as_csv(outfile, stars: Sequence[StarHex]) -> None:
-    outfile.write(
-        '"Planet","Hex","Trade Class","Chara.",'
-        '"Population","Tech. Age","World Tag 1","World Tag 2"\r\n'
+def write_as_xsv(outfile, stars: list[StarHex], sep: str = ",") -> None:
+    writer = csv.writer(
+        outfile, delimiter=sep, quotechar='"', quoting=csv.QUOTE_MINIMAL
+    )
+    writer.writerow(
+        [
+            "Planet",
+            "Hex",
+            "Trade Class",
+            "Chara.",
+            "Population",
+            "Tech. Age",
+            "World Tag 1",
+            "World Tag 2",
+        ]
     )
     for s in stars:
-        outfile.write(
-            f'"{s.name}"'
-            f',"{s.width:02d}{s.height:02d}"'
-            f',"{trade_class_str(s.trade_class)}"'
-            f',"{chara_str(s.chara)}"'
-            f",{s.population}"
-            f',"{tech_age_str(s.tech_age)}"'
-            f',"{s.world_tag_1}"'
-            f',"{s.world_tag_2}"\r\n'
+        writer.writerow(
+            [
+                s.name,
+                f"{s.width:02d}{s.height:02d}",
+                trade_class_str(s.trade_class),
+                chara_str(s.chara),
+                str(s.population),
+                tech_age_str(s.tech_age),
+                s.world_tag_1,
+                s.world_tag_2,
+            ]
         )
 
 
-def write_as_xsv(outfile, stars: Sequence[StarHex], sep: str = "\t") -> None:
-    outfile.write(
-        f"Planet{sep}Hex{sep}Trade Class{sep}Chara.{sep}"
-        f"Population{sep}Tech. Age{sep}World Tag 1{sep}World Tag 2\r\n"
-    )
-    for s in stars:
-        outfile.write(
-            f"{s.name}"
-            f"{sep}{s.width:02d}{s.height:02d}"
-            f"{sep}{trade_class_str(s.trade_class)}"
-            f"{sep}{chara_str(s.chara)}"
-            f"{sep}{s.population}"
-            f"{sep}{tech_age_str(s.tech_age)}"
-            f"{sep}{s.world_tag_1}"
-            f"{sep}{s.world_tag_2}\r\n"
-        )
-
-
-def write_as_text(outfile, stars: Sequence[StarHex], length: int) -> None:
+def write_as_text(outfile, stars: list[StarHex], length: int) -> None:
     outfile.write(
         f"|{'Planet':{length}s}|Hex |Trade Class     |Chara.    "
         "|    Population|Tech. Age         |World Tags\n"
@@ -606,10 +609,10 @@ def write_as_text(outfile, stars: Sequence[StarHex], length: int) -> None:
         )
 
 
-def write_as_short_text(outfile, stars: Sequence[StarHex], length: int) -> None:
+def write_as_short_text(outfile, stars: list[StarHex], length: int) -> None:
     outfile.write(f"|{'Planet':{length}s}|Hex |TC|Ch|    Population|TA|World Tags\n")
     outfile.write(
-        f"|{'-'*(length)}|----|--|--|-----:|--" "|------------------------------\n"
+        f"|{'-'*(length)}|----|--|--|-----:|--|------------------------------\n"
     )
     for s in stars:
         outfile.write(
@@ -639,7 +642,7 @@ class StarHexEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-def write_as_json(outfile, args, stars: Sequence[StarHex]) -> None:
+def write_as_json(outfile, args, stars: list[StarHex]) -> None:
     obj: dict = {
         "x": args.start_width,
         "y": args.start_height,
@@ -773,7 +776,7 @@ def main() -> None:
     names = namemaker.make_name_set(args.namelist)
 
     # generate a map of unnamed stars
-    stars: Sequence[StarHex] = sector(
+    stars: list[StarHex] = sector(
         height=args.height,
         width=args.width,
         density=args.density,
@@ -788,16 +791,10 @@ def main() -> None:
         # generate a name for the star / planet
         star.name = names.make_name()
         length = max(length, len(star.name))
-        # generate the trade type
         star.trade_class = trade_class(args.settlement)
         star.chara = characteristic(star.trade_class)
         star.population = population(star.trade_class, args.settlement)
-        if star.population == 0:
-            star.tech_age = TechAge.NO_TECHNOLOGY  # No Technology
-        elif avg_age:
-            star.tech_age = tech_age_offset(avg_age)
-        else:
-            star.tech_age = tech_age()
+        star.tech_age = tech_age(star.population, avg_age)
         star.world_tag_1 = world_tag(1)
         star.world_tag_2 = world_tag(2)
 
@@ -810,10 +807,7 @@ def main() -> None:
         if args.json:
             write_as_json(outfile, args, stars)
         elif args.separator:
-            if args.separator == ",":
-                write_as_csv(outfile, stars)
-            else:
-                write_as_xsv(outfile, stars, args.separator)
+            write_as_xsv(outfile, stars, args.separator)
         elif args.abbreviate:
             write_as_short_text(outfile, stars, length)
         else:
