@@ -653,6 +653,13 @@ def write_as_json(outfile, args, stars: list[StarHex]) -> None:
     json.dump(obj, outfile, cls=StarHexEncoder, indent=4)
 
 
+def read_exclude_file(nameset, infile) -> None:
+    with infile:
+        for line in infile.readlines():
+            name: str = line.strip()
+            nameset.add_to_history(name)
+
+
 def debug(*args, **kwargs) -> None:
     print("DEBUG:", *args, file=sys.stderr, **kwargs)
 
@@ -667,6 +674,12 @@ def main() -> None:
         "--namelist",
         help="text file providing example names",
         default="Greek mythology.txt",
+    )
+    parser.add_argument(
+        "-x",
+        "--exclude-list",
+        help="text file providing names NOT to use",
+        type=argparse.FileType(mode="r", encoding="UTF-8"),
     )
     parser.add_argument(
         "-W",
@@ -774,6 +787,9 @@ def main() -> None:
 
     # initialize namemaker
     names = namemaker.make_name_set(args.namelist)
+
+    if args.exclude_list:
+        read_exclude_file(names, args.exclude_list)
 
     # generate a map of unnamed stars
     stars: list[StarHex] = sector(

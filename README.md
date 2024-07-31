@@ -1,5 +1,5 @@
 Programs to generate sector data for the RPG _Faster Than Light: Nomad_,
-available from DriveThruRPG.com or Lulu.com.
+available from DriveThruRPG.com.
 
 ## Dependencies
 
@@ -16,8 +16,8 @@ pip install namemaker
 ### Usage
 
 ```
-usage: nomadsec.py [-h] [-n NAMELIST] [-W WIDTH] [-H HEIGHT] [-X START_WIDTH]
-                   [-Y START_HEIGHT] [-d {1,2,3,4,5}]
+usage: nomadsec.py [-h] [-n NAMELIST] [-x EXCLUDE_LIST] [-W WIDTH] [-H HEIGHT]
+                   [-X START_WIDTH] [-Y START_HEIGHT] [-d {1,2,3,4,5}]
                    [-s {core,settled,conflict,frontier,unexplored}]
                    [-t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}] [-D] [-o OUTPUT]
                    [-a] [-j] [--separator SEPARATOR] [--csv] [--tsv]
@@ -28,6 +28,8 @@ options:
   -h, --help            show this help message and exit
   -n NAMELIST, --namelist NAMELIST
                         text file providing example names
+  -x EXCLUDE_LIST, --exclude-list EXCLUDE_LIST
+                        text file providing names NOT to use
   -W WIDTH, --width WIDTH
                         number of hexes/parsecs across
   -H HEIGHT, --height HEIGHT
