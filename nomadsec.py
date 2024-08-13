@@ -39,9 +39,7 @@ def nomad_dice(nkeep: int = 2, nadv: int = 0) -> int:
     """
     ntotal: int = nkeep + abs(nadv)
     rolls: list[int] = sorted((one_die() for _ in range(ntotal)))
-    if nadv < 0:
-        return sum(rolls[:nkeep])
-    return sum(rolls[-nkeep:])
+    return sum(rolls[:nkeep]) if nadv < 0 else sum(rolls[-nkeep:])
 
 
 ####################### TABLES ################################
@@ -439,9 +437,7 @@ def trade_class_str(trade: TradeClass | None) -> str:
 
 
 def trade_class_abbrev(trade: TradeClass | None) -> str:
-    if not trade:
-        return ""
-    return TRADE_CLASS_TO_ABBREVS[trade]
+    return TRADE_CLASS_TO_ABBREVS[trade] if trade else ""
 
 
 def characteristic(tc: TradeClass) -> Characteristic:
@@ -450,15 +446,11 @@ def characteristic(tc: TradeClass) -> Characteristic:
 
 
 def chara_str(c: Characteristic | None) -> str:
-    if not c:
-        return ""
-    return c.name.capitalize()
+    return c.name.capitalize() if c else ""
 
 
 def chara_abbrev(c: Characteristic | None) -> str:
-    if not c:
-        return ""
-    return CHARACTERISTICS_TO_ABBREVS[c]
+    return CHARACTERISTICS_TO_ABBREVS[c] if c else ""
 
 
 def population(tc: TradeClass, settlement: str) -> int:
@@ -467,12 +459,11 @@ def population(tc: TradeClass, settlement: str) -> int:
     assert tc in POPULATION
     popspec: PopulationSpec = POPULATION[tc]
     pop: int = (nomad_dice(popspec.ndice) + popspec.modifier) * popspec.multiplier
-    if pop < 0:
-        return 0
-    return pop
+    return max(pop, 0)
 
 
 def population_abbrev(pop: int) -> str:
+    # sourcery skip: assign-if-exp, reintroduce-else
     if pop == 0:
         return f"{pop:6d}"
     if pop % 1_000_000_000 == 0:
@@ -501,21 +492,15 @@ def tech_age_offset(age: TechAge) -> TechAge:
 def tech_age(pop: int, avg_age: TechAge | None = None) -> TechAge:
     if pop == 0:
         return TechAge.NO_TECHNOLOGY
-    if avg_age:
-        return tech_age_offset(avg_age)
-    return tech_age_random()
+    return tech_age_offset(avg_age) if avg_age else tech_age_random()
 
 
 def tech_age_str(age: TechAge | None) -> str:
-    if not age:
-        return ""
-    return string.capwords(age.name.replace("_", " "))
+    return string.capwords(age.name.replace("_", " ")) if age else ""
 
 
 def tech_age_abbrev(age: TechAge | None) -> str:
-    if not age:
-        return ""
-    return TECHNOLOGY_AGES_TO_ABBREVS[age]
+    return TECHNOLOGY_AGES_TO_ABBREVS[age] if age else ""
 
 
 def str_to_tech_age(agestr: str | None) -> TechAge | None:
@@ -549,12 +534,20 @@ class StarHex:
 def sector(
     width: int = 8, height: int = 10, density: int = 3, x: int = 1, y: int = 1
 ) -> list[StarHex]:
-    # Generate a number of stars proportional to density
-    result: list[StarHex] = []
-    for w, h in itertools.product(range(x, width + x), range(y, height + y)):
-        if random.randint(MINIMUM_DENSITY, MAXIMUM_DENSITY) <= density:
-            result.append(StarHex(w, h, "", None, None, 0, None, "", ""))
-    return result
+    return [
+        StarHex(w, h, "", None, None, 0, None, "", "")
+        for w, h in itertools.product(range(x, width + x), range(y, height + y))
+        if random.randint(MINIMUM_DENSITY, MAXIMUM_DENSITY) <= density
+    ]
+
+
+def populate_star(star: StarHex, settlement: str, avg_age: TechAge | None) -> None:
+    star.trade_class = trade_class(settlement)
+    star.chara = characteristic(star.trade_class)
+    star.population = population(star.trade_class, settlement)
+    star.tech_age = tech_age(star.population, avg_age)
+    star.world_tag_1 = world_tag(1)
+    star.world_tag_2 = world_tag(2)
 
 
 def write_as_xsv(outfile, stars: list[StarHex], sep: str = ",") -> None:
@@ -665,6 +658,7 @@ def debug(*args, **kwargs) -> None:
 
 
 def main() -> None:
+    # sourcery skip: extract-method
     # Parse arguments
     parser = argparse.ArgumentParser(
         description="Generate a sector for the _FTL: Nomad_ RPG"
@@ -802,17 +796,14 @@ def main() -> None:
 
     length: int = 0
     avg_age: TechAge | None = str_to_tech_age(args.tech)
+    settlement: str = args.settlement
 
     for star in stars:
         # generate a name for the star / planet
         star.name = names.make_name()
         length = max(length, len(star.name))
-        star.trade_class = trade_class(args.settlement)
-        star.chara = characteristic(star.trade_class)
-        star.population = population(star.trade_class, args.settlement)
-        star.tech_age = tech_age(star.population, avg_age)
-        star.world_tag_1 = world_tag(1)
-        star.world_tag_2 = world_tag(2)
+        # add attributes to star
+        populate_star(star, settlement, avg_age)
 
     if args.debug:
         debug(f"planets={len(stars)}")
