@@ -202,9 +202,7 @@ def _starport_code(planet: PlanetData) -> str:
 
 
 def _size_code(planet: PlanetData) -> int:
-    if planet.chara == "Asteroid":
-        return 0
-    return PLANET_SIZE_DEFAULT
+    return 0 if planet.chara == "Asteroid" else PLANET_SIZE_DEFAULT
 
 
 def _atmosphere_code(planet: PlanetData) -> int:
@@ -232,8 +230,7 @@ def _population_code(planet: PlanetData) -> int:
 def _government_code(planet: PlanetData) -> int:
     if planet.population == 0:
         return 0
-    common: set[str] = set(GOV_TAGS_TO_CODES) & planet.tags
-    if common:
+    if common := set(GOV_TAGS_TO_CODES) & planet.tags:
         return round(sum(GOV_TAGS_TO_CODES[x] for x in common) / len(common))
     return GOVERNMENT_CODE_DEFAULT
 
@@ -241,8 +238,7 @@ def _government_code(planet: PlanetData) -> int:
 def _law_level_code(planet: PlanetData) -> int:
     if planet.population == 0:
         return 0
-    common: set[str] = set(LAW_TAGS_TO_CODES) & planet.tags
-    if common:
+    if common := set(LAW_TAGS_TO_CODES) & planet.tags:
         return round(sum(LAW_TAGS_TO_CODES[x] for x in common) / len(common))
     return LAW_CODE_DEFAULT
 
@@ -261,8 +257,7 @@ def _upp(planet: PlanetData) -> str:
 
 
 def _notes(planet: PlanetData) -> str:
-    result: list[str] = []
-    result.append(_trade_class_code(planet.trade_class))
+    result: list[str] = [_trade_class_code(planet.trade_class)]
     if planet.chara in CHARA_TO_TRADE_CODES:
         result.append(CHARA_TO_TRADE_CODES[planet.chara])
     if planet.population >= 1_000_000_000:
@@ -283,6 +278,7 @@ def _base(planet: PlanetData) -> str:
 
 
 def _zone(planet: PlanetData) -> str:
+    # sourcery skip: assign-if-exp, reintroduce-else
     if planet.tags & RED_ZONE_TAGS:
         return "R"
     if planet.tags & AMBER_ZONE_TAGS:

@@ -7,11 +7,13 @@ import json
 import random
 import string
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, auto
+from typing import Any
 
 # `pip install namemaker`
-import namemaker
+import namemaker # type: ignore
 
 ###################### CONSTANTS ###############################
 
@@ -550,7 +552,7 @@ def populate_star(star: StarHex, settlement: str, avg_age: TechAge | None) -> No
     star.world_tag_2 = world_tag(2)
 
 
-def write_as_xsv(outfile, stars: list[StarHex], sep: str = ",") -> None:
+def write_as_xsv(outfile, stars: Iterable[StarHex], sep: str = ",") -> None:
     writer = csv.writer(
         outfile, delimiter=sep, quotechar='"', quoting=csv.QUOTE_MINIMAL
     )
@@ -581,7 +583,7 @@ def write_as_xsv(outfile, stars: list[StarHex], sep: str = ",") -> None:
         )
 
 
-def write_as_text(outfile, stars: list[StarHex], length: int) -> None:
+def write_as_text(outfile, stars: Iterable[StarHex], length: int) -> None:
     outfile.write(
         f"|{'Planet':{length}s}|Hex |Trade Class     |Chara.    "
         "|    Population|Tech. Age         |World Tags\n"
@@ -602,7 +604,7 @@ def write_as_text(outfile, stars: list[StarHex], length: int) -> None:
         )
 
 
-def write_as_short_text(outfile, stars: list[StarHex], length: int) -> None:
+def write_as_short_text(outfile, stars: Iterable[StarHex], length: int) -> None:
     outfile.write(f"|{'Planet':{length}s}|Hex |TC|Ch|    Population|TA|World Tags\n")
     outfile.write(
         f"|{'-'*(length)}|----|--|--|-----:|--|------------------------------\n"
@@ -620,7 +622,7 @@ def write_as_short_text(outfile, stars: list[StarHex], length: int) -> None:
 
 
 class StarHexEncoder(json.JSONEncoder):
-    def default(self, o):
+    def default(self, o) -> dict[str, Any]:
         if isinstance(o, StarHex):
             s: StarHex = o
             return {
@@ -635,7 +637,7 @@ class StarHexEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-def write_as_json(outfile, args, stars: list[StarHex]) -> None:
+def write_as_json(outfile, args, stars: Iterable[StarHex]) -> None:
     obj: dict = {
         "x": args.start_width,
         "y": args.start_height,

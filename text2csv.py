@@ -88,6 +88,15 @@ def split_tags(row: list[str], col) -> None:
     row[col : col + 1] = re.split(r"\s*,\s*", row[col])
 
 
+def convert_to_csv_format(cels: list[str], csvdata:list[list[str]]):
+    unabbrev(cels, TRADE_CLASS_COL, TRADE_CLASS_ABBREVS)
+    unabbrev(cels, CHARACTERISTIC_COL, CHARACTERISTIC_ABBREVS)
+    unabbrev(cels, TECHNOLOGY_AGE_COL, TECHNOLOGY_AGE_ABBREVS)
+    unabbrev_pop(cels, POPULATION_COL)
+    split_tags(cels, WORLD_TAGS_COL)
+    csvdata.append(cels[1:])
+
+
 def main() -> None:
     # Parse arguments
     parser = argparse.ArgumentParser(
@@ -110,14 +119,8 @@ def main() -> None:
     with args.inputfile as infile:
         for line in infile.readlines():
             cels: list[str] = re.split(r"\s*\|\s*", line.rstrip())
-            if not cels[1][0] == "-" and not cels[1] == "Planet":
-                unabbrev(cels, TRADE_CLASS_COL, TRADE_CLASS_ABBREVS)
-                unabbrev(cels, CHARACTERISTIC_COL, CHARACTERISTIC_ABBREVS)
-                unabbrev(cels, TECHNOLOGY_AGE_COL, TECHNOLOGY_AGE_ABBREVS)
-                unabbrev_pop(cels, POPULATION_COL)
-                split_tags(cels, WORLD_TAGS_COL)
-                csvdata.append(cels[1:])
-
+            if cels[1][0] != "-" and cels[1] != "Planet":
+                convert_to_csv_format(cels, csvdata)
     with args.outputfile as outfile:
         writer = csv.writer(outfile)
         writer.writerow(HEADER)

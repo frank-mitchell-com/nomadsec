@@ -73,16 +73,13 @@ EXPECT_2D_P_2D: dict[int, float] = {
 
 
 def init_histogram(start: int = 2, end: int = 2) -> dict[int, float]:
-    result: dict[int, float] = {}
-    for x in range(start, end + 1):
-        result[x] = 0.0
-    return result
+    return {x: 0.0 for x in range(start, end + 1)}
 
 
 def test_dice(title: str, expect: dict[int, float], nkeep: int, nbonus: int) -> None:
     print(f"=== {title} ===")
     histogram: dict[int, float] = init_histogram(nkeep, nkeep * 6)
-    for x in range(NUM_TRIALS):
+    for _ in range(NUM_TRIALS):
         result = nomad_dice(nkeep, nbonus)
         histogram[result] += 1
 

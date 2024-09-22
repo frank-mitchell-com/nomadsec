@@ -48,14 +48,14 @@ class SimpleNameSource:
             self._medial = jsonsrc["medial"]
 
     def name(self) -> str:
-        name_seq: list[str] = []
         nsyllables: int = random.randint(self._min, self._max)
 
-        name_seq.append(random.choice(self._initial))
-        name_seq.append(random.choice(self._vowels))
+        name_seq: list[str] = [
+            random.choice(self._initial),
+            random.choice(self._vowels),
+        ]
         for _ in range(1, nsyllables):
-            name_seq.append(random.choice(self._medial))
-            name_seq.append(random.choice(self._vowels))
+            name_seq.extend((random.choice(self._medial), random.choice(self._vowels)))
         name_seq.append(random.choice(self._final))
 
         return "".join(name_seq).capitalize()
