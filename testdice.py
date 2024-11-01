@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+
 from nomadsec import nomad_dice
 
 NUM_TRIALS = 1_000_000

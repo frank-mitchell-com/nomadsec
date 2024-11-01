@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+
 import argparse
 import csv
 import re
@@ -88,7 +93,7 @@ def split_tags(row: list[str], col) -> None:
     row[col : col + 1] = re.split(r"\s*,\s*", row[col])
 
 
-def convert_to_csv_format(cels: list[str], csvdata:list[list[str]]):
+def convert_to_csv_format(cels: list[str], csvdata: list[list[str]]):
     unabbrev(cels, TRADE_CLASS_COL, TRADE_CLASS_ABBREVS)
     unabbrev(cels, CHARACTERISTIC_COL, CHARACTERISTIC_ABBREVS)
     unabbrev(cels, TECHNOLOGY_AGE_COL, TECHNOLOGY_AGE_ABBREVS)

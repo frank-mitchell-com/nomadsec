@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#    "namemaker"
+# ]
+# ///
+
 import argparse
 import csv
 import itertools
@@ -13,8 +20,7 @@ from enum import auto
 from enum import Enum
 from typing import Any
 
-# `pip install namemaker`
-import namemaker # type: ignore
+import namemaker  # type: ignore
 
 ###################### CONSTANTS ###############################
 
