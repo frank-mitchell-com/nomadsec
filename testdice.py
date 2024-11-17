@@ -5,6 +5,8 @@
 # dependencies = []
 # ///
 
+import time
+
 from nomadsec import nomad_dice
 
 NUM_TRIALS = 1_000_000
@@ -82,6 +84,8 @@ def init_histogram(start: int = 2, end: int = 2) -> dict[int, float]:
 
 
 def test_dice(title: str, expect: dict[int, float], nkeep: int, nbonus: int) -> None:
+    start_time: float = time.time()
+
     print(f"=== {title} ===")
     histogram: dict[int, float] = init_histogram(nkeep, nkeep * 6)
     for _ in range(NUM_TRIALS):
@@ -94,13 +98,17 @@ def test_dice(title: str, expect: dict[int, float], nkeep: int, nbonus: int) -> 
         actual = histogram[x] / NUM_TRIALS
         chisq = ((actual - expect[x]) / expect[x]) ** 2
         chisqtotal += chisq
-        print(f"{x:2d}\t{actual:.8f}\t{expect[x]:.8f}\t{chisq:.3g}")
-    print(f"{'':2s}\t{'':10s}\t{'TOTAL':10s}\t{chisqtotal:.3g}")
+        print(f"{x:2d}\t{actual:.8f}\t{expect[x]:.8f}\t{chisq:.10f}")
+    print(f"{'':2s}\t{'':10s}\t{'TOTAL':10s}\t{chisqtotal:.10f}")
+
+    end_time:float = time.time()
+
+    elapsed_time: float = end_time - start_time
 
     if chisqtotal < CHISQ_TOLERANCE:
-        print("OK")
+        print(f"OK ({elapsed_time:.3f} s)")
     else:
-        print("FAIL")
+        print(f"FAIL ({elapsed_time:.3f} s)")
     print("================")
 
 
