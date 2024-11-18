@@ -18,9 +18,9 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import auto
 from enum import Enum
-from typing import Any
+from typing import Any, Protocol, Tuple
 
-import namemaker  # type: ignore
+from namemaker import make_name_set  # type: ignore
 
 ###################### CONSTANTS ###############################
 
@@ -32,6 +32,16 @@ DEFAULT_SECTOR_WIDTH: int = 8
 DEFAULT_DENSITY: int = 3
 MAXIMUM_DENSITY: int = 6
 MINIMUM_DENSITY: int = 1
+
+##################### PROTOCOL ##############################
+
+
+class NameSet(Protocol):
+    def make_name(self) -> str:
+        return ""
+
+    def add_to_history(self, name: str) -> None: ...
+
 
 ####################### DICE #################################
 
@@ -559,6 +569,46 @@ def populate_star(star: StarHex, settlement: str, avg_age: TechAge | None) -> No
     star.world_tag_2 = world_tag(2)
 
 
+def generate_stars(
+    nameset: NameSet,
+    avg_age: TechAge | None = None,
+    settlement: str = "settled",
+    density: int = DEFAULT_DENSITY,
+    height: int = DEFAULT_SECTOR_HEIGHT,
+    width: int = DEFAULT_SECTOR_WIDTH,
+    x: int = 1,
+    y: int = 1,
+) -> Tuple[list[StarHex], int]:
+
+    # Check args
+    assert nameset
+    assert settlement in SETTLEMENT_TYPES
+    assert x > 0
+    assert y > 0
+    assert height > 0
+    assert width > 0
+
+    # generate a map of unnamed stars
+    stars: list[StarHex] = sector(
+        height=height,
+        width=width,
+        density=density,
+        x=x,
+        y=y,
+    )
+
+    length: int = 0
+
+    for star in stars:
+        # generate a name for the star / planet
+        star.name = nameset.make_name()
+        length = max(length, len(star.name))
+        # add attributes to star
+        populate_star(star, settlement, avg_age)
+
+    return stars, length
+
+
 def write_as_xsv(outfile, stars: Iterable[StarHex], sep: str = ",") -> None:
     writer = csv.writer(
         outfile, delimiter=sep, quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -655,7 +705,7 @@ def write_as_json(outfile, args, stars: Iterable[StarHex]) -> None:
     json.dump(obj, outfile, cls=StarHexEncoder, indent=4)
 
 
-def read_exclude_file(nameset, infile) -> None:
+def read_exclude_file(nameset: NameSet, infile) -> None:
     with infile:
         for line in infile.readlines():
             name: str = line.strip()
@@ -789,30 +839,21 @@ def main() -> None:
         debug(f"tech={args.tech}")
 
     # initialize namemaker
-    names = namemaker.make_name_set(args.namelist)
+    nameset: NameSet = make_name_set(args.namelist)
 
     if args.exclude_list:
-        read_exclude_file(names, args.exclude_list)
+        read_exclude_file(nameset, args.exclude_list)
 
-    # generate a map of unnamed stars
-    stars: list[StarHex] = sector(
+    stars, length = generate_stars(
+        nameset=nameset,
+        settlement=args.settlement,
+        avg_age=str_to_tech_age(args.tech),
         height=args.height,
         width=args.width,
         density=args.density,
         x=args.start_width,
         y=args.start_height,
     )
-
-    length: int = 0
-    avg_age: TechAge | None = str_to_tech_age(args.tech)
-    settlement: str = args.settlement
-
-    for star in stars:
-        # generate a name for the star / planet
-        star.name = names.make_name()
-        length = max(length, len(star.name))
-        # add attributes to star
-        populate_star(star, settlement, avg_age)
 
     if args.debug:
         debug(f"planets={len(stars)}")
