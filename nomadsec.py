@@ -46,18 +46,21 @@ class NameSet(Protocol):
 ####################### DICE #################################
 
 
-def one_die() -> int:
-    return random.randint(1, 6)
-
-
 def nomad_dice(nkeep: int = 2, nadv: int = 0) -> int:
     """
     Roll `nkeep` + abs(`nadv`) 6-sided dice;
     if nadv is negative, keep the `nkeep`
     lowest, else keep the `nkeep` highest.
     """
+    def one_die():
+        return random.randint(1, 6)
+
+    if nkeep == 1 and nadv == 0:
+        return one_die()
+
     ntotal: int = nkeep + abs(nadv)
-    rolls: list[int] = sorted((one_die() for _ in range(ntotal)))
+    rolls: list[int] = [one_die() for _ in range(ntotal)]
+    rolls.sort()
     return sum(rolls[:nkeep]) if nadv < 0 else sum(rolls[-nkeep:])
 
 
@@ -461,7 +464,7 @@ def trade_class_abbrev(trade: TradeClass | None) -> str:
 
 def characteristic(tc: TradeClass) -> Characteristic:
     assert tc in CHARACTERISTICS
-    return CHARACTERISTICS[tc][one_die() - 1]
+    return CHARACTERISTICS[tc][nomad_dice(1) - 1]
 
 
 def chara_str(c: Characteristic | None) -> str:
@@ -530,8 +533,8 @@ def str_to_tech_age(agestr: str | None) -> TechAge | None:
 
 def world_tag(index: int = 1) -> str:
     if index % 2 == 1:
-        return WORLD_TAG_TABLE_1[one_die() - 1][one_die() - 1]
-    return WORLD_TAG_TABLE_2[one_die() - 1][one_die() - 1]
+        return WORLD_TAG_TABLE_1[nomad_dice(1) - 1][nomad_dice(1) - 1]
+    return WORLD_TAG_TABLE_2[nomad_dice(1) - 1][nomad_dice(1) - 1]
 
 
 ####################### SECTORS ###############################
@@ -551,8 +554,19 @@ class StarHex:
 
 
 def sector(
-    width: int = 8, height: int = 10, density: int = 3, x: int = 1, y: int = 1
+    density: int = DEFAULT_DENSITY,
+    height: int = DEFAULT_SECTOR_HEIGHT,
+    width: int = DEFAULT_SECTOR_WIDTH,
+    x: int = 1,
+    y: int = 1
 ) -> list[StarHex]:
+    # Check args
+    assert MINIMUM_DENSITY <= density <= MAXIMUM_DENSITY
+    assert height > 0
+    assert width > 0
+    assert x > 0
+    assert y > 0
+
     return [
         StarHex(w, h, "", None, None, 0, None, "", "")
         for w, h in itertools.product(range(x, width + x), range(y, height + y))
@@ -561,6 +575,9 @@ def sector(
 
 
 def populate_star(star: StarHex, settlement: str, avg_age: TechAge | None) -> None:
+    assert star
+    assert settlement in SETTLEMENT_TYPES
+
     star.trade_class = trade_class(settlement)
     star.chara = characteristic(star.trade_class)
     star.population = population(star.trade_class, settlement)
@@ -583,16 +600,17 @@ def generate_stars(
     # Check args
     assert nameset
     assert settlement in SETTLEMENT_TYPES
-    assert x > 0
-    assert y > 0
+    assert MINIMUM_DENSITY <= density <= MAXIMUM_DENSITY
     assert height > 0
     assert width > 0
+    assert x > 0
+    assert y > 0
 
     # generate a map of unnamed stars
     stars: list[StarHex] = sector(
+        density=density,
         height=height,
         width=width,
-        density=density,
         x=x,
         y=y,
     )
