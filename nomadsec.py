@@ -15,7 +15,7 @@ import random
 import string
 import sys
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import auto
 from enum import Enum
 from typing import Any, Protocol, Tuple
@@ -33,7 +33,14 @@ DEFAULT_DENSITY: int = 3
 MAXIMUM_DENSITY: int = 6
 MINIMUM_DENSITY: int = 1
 
-##################### PROTOCOL ##############################
+##################### PROTOCOLS ##############################
+
+
+class NomadDice(Protocol):
+    def __call__(
+        self, nkeep: int = 2, nadv: int = 0, nsides: int = 6, low: int = 1
+    ) -> int:
+        pass
 
 
 class NameSet(Protocol):
@@ -46,14 +53,15 @@ class NameSet(Protocol):
 ####################### DICE #################################
 
 
-def nomad_dice(nkeep: int = 2, nadv: int = 0) -> int:
+def nomad_dice(nkeep: int = 2, nadv: int = 0, nsides: int = 6, low: int = 1) -> int:
     """
-    Roll `nkeep` + abs(`nadv`) 6-sided dice;
+    Roll `nkeep` + abs(`nadv`) `nsides`-sided dice;
     if nadv is negative, keep the `nkeep`
     lowest, else keep the `nkeep` highest.
     """
+
     def one_die():
-        return random.randint(1, 6)
+        return random.randint(low, nsides + low - 1)
 
     if nkeep == 1 and nadv == 0:
         return one_die()
@@ -68,13 +76,25 @@ def nomad_dice(nkeep: int = 2, nadv: int = 0) -> int:
 
 # All tables copied from the XD6 SRD.
 
-SETTLEMENT_TYPES: list[str] = [
-    "core",
-    "settled",
-    "conflict",
-    "frontier",
-    "unexplored",
-]
+
+class Settlement(Enum):
+    CORE = auto()
+    SETTLED = auto()
+    CONFLICT = auto()
+    FRONTIER = auto()
+    UNEXPLORED = auto()
+
+
+SETTLEMENT_TYPES: list[Settlement] = list(Settlement)
+
+
+SETTLEMENT_TYPE_NAMES: dict[str, Settlement] = {
+    "core": Settlement.CORE,
+    "settled": Settlement.SETTLED,
+    "conflict": Settlement.CONFLICT,
+    "frontier": Settlement.FRONTIER,
+    "unexplored": Settlement.UNEXPLORED,
+}
 
 
 class TradeClass(Enum):
@@ -86,6 +106,9 @@ class TradeClass(Enum):
     POOR = auto()
     RESOURCE = auto()
     RICH = auto()
+
+
+TRADE_CLASS_TYPES: list[TradeClass] = list(TradeClass)
 
 
 TRADE_CLASS_TO_ABBREVS: dict[TradeClass, str] = {
@@ -227,7 +250,7 @@ CHARACTERISTICS: dict[TradeClass, list[Characteristic]] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class PopulationSpec:
     ndice: int
     modifier: int
@@ -436,35 +459,44 @@ WORLD_TAG_TABLE_2: list[list[str]] = [
 ####################### TABLE LOOKUPS #############################
 
 
-def trade_class(sector_type: str | None) -> TradeClass:
+def str_to_settlement(name: str | None) -> Settlement | None:
+    return SETTLEMENT_TYPE_NAMES.get(name) if name else None
+
+
+def trade_class(settle: Settlement | None, roll: NomadDice = nomad_dice) -> TradeClass:
+    assert not settle or settle in SETTLEMENT_TYPES
+    assert roll
+
     result: int
-    if sector_type == "unexplored":
-        result = nomad_dice(2)
+    if settle == Settlement.UNEXPLORED:
+        result = roll(2)
         return TRADE_CLASS_UNEXPLORED[result]
-    if sector_type == "core":
-        result = nomad_dice(2, +2)
-    elif sector_type == "frontier":
-        result = nomad_dice(2, -1)
-    elif sector_type == "conflict":
-        result = nomad_dice(2, +1)
+    if settle == Settlement.CORE:
+        result = roll(2, +2)
+    elif settle == Settlement.FRONTIER:
+        result = roll(2, -1)
+    elif settle == Settlement.CONFLICT:
+        result = roll(2, +1)
     else:
-        result = nomad_dice(2)
+        result = roll(2)
     return TRADE_CLASS_SETTLED[result]
 
 
 def trade_class_str(trade: TradeClass | None) -> str:
+    assert not trade or trade in TRADE_CLASS_TYPES
     if not trade:
         return ""
     return string.capwords(trade.name.replace("_", " ")).replace(" ", "-")
 
 
 def trade_class_abbrev(trade: TradeClass | None) -> str:
+    assert not trade or trade in TRADE_CLASS_TYPES
     return TRADE_CLASS_TO_ABBREVS[trade] if trade else ""
 
 
-def characteristic(tc: TradeClass) -> Characteristic:
+def characteristic(tc: TradeClass, roll: NomadDice = nomad_dice) -> Characteristic:
     assert tc in CHARACTERISTICS
-    return CHARACTERISTICS[tc][nomad_dice(1) - 1]
+    return CHARACTERISTICS[tc][roll(1) - 1]
 
 
 def chara_str(c: Characteristic | None) -> str:
@@ -475,12 +507,18 @@ def chara_abbrev(c: Characteristic | None) -> str:
     return CHARACTERISTICS_TO_ABBREVS[c] if c else ""
 
 
-def population(tc: TradeClass, settlement: str) -> int:
-    if tc == TradeClass.POOR and settlement == "unexplored":
+def population(
+    tc: TradeClass, settle: Settlement | None, roll: NomadDice = nomad_dice
+) -> int:
+    assert tc in TRADE_CLASS_TYPES
+    assert not settle or settle in SETTLEMENT_TYPES
+    assert roll
+
+    if tc == TradeClass.POOR and settle == Settlement.UNEXPLORED:
         return 0
     assert tc in POPULATION
     popspec: PopulationSpec = POPULATION[tc]
-    pop: int = (nomad_dice(popspec.ndice) + popspec.modifier) * popspec.multiplier
+    pop: int = (roll(popspec.ndice) + popspec.modifier) * popspec.multiplier
     return max(pop, 0)
 
 
@@ -497,12 +535,16 @@ def population_abbrev(pop: int) -> str:
     return f"{pop:6d}"
 
 
-def tech_age_random() -> TechAge:
-    return TECHNOLOGY_AGES_TABLE[nomad_dice(2)]
+def tech_age_random(roll: NomadDice = nomad_dice) -> TechAge:
+    assert roll
+    return TECHNOLOGY_AGES_TABLE[roll(2)]
 
 
-def tech_age_offset(age: TechAge) -> TechAge:
-    offset: int = TECHNOLOGY_AGES_OFFSET_TABLE[nomad_dice(2)]
+def tech_age_offset(age: TechAge, roll: NomadDice = nomad_dice) -> TechAge:
+    assert age in TECHNOLOGY_AGES
+    assert roll
+
+    offset: int = TECHNOLOGY_AGES_OFFSET_TABLE[roll(2)]
     index: int = age.value
     if index + offset < TechAge.EARLY_PRIMITIVE.value:
         return TechAge.EARLY_PRIMITIVE
@@ -511,10 +553,14 @@ def tech_age_offset(age: TechAge) -> TechAge:
     return TECHNOLOGY_AGES[index + offset]
 
 
-def tech_age(pop: int, avg_age: TechAge | None = None) -> TechAge:
+def tech_age(
+    pop: int, avg_age: TechAge | None = None, roll: NomadDice = nomad_dice
+) -> TechAge:
+    assert not avg_age or avg_age in TECHNOLOGY_AGES
+    assert roll
     if pop == 0:
         return TechAge.NO_TECHNOLOGY
-    return tech_age_offset(avg_age) if avg_age else tech_age_random()
+    return tech_age_offset(avg_age, roll) if avg_age else tech_age_random(roll)
 
 
 def tech_age_str(age: TechAge | None) -> str:
@@ -522,43 +568,92 @@ def tech_age_str(age: TechAge | None) -> str:
 
 
 def tech_age_abbrev(age: TechAge | None) -> str:
-    return TECHNOLOGY_AGES_TO_ABBREVS[age] if age else ""
+    return TECHNOLOGY_AGES_TO_ABBREVS.get(age, "") if age else ""
 
 
 def str_to_tech_age(agestr: str | None) -> TechAge | None:
-    if agestr and agestr in TECHNOLOGY_AGES_ABBREVS:
-        return TECHNOLOGY_AGES_ABBREVS[agestr]
-    return None
+    return TECHNOLOGY_AGES_ABBREVS.get(agestr) if agestr else None
 
 
-def world_tag(index: int = 1) -> str:
+def world_tag(index: int = 1, roll: NomadDice = nomad_dice) -> str:
+    assert roll
     if index % 2 == 1:
-        return WORLD_TAG_TABLE_1[nomad_dice(1) - 1][nomad_dice(1) - 1]
-    return WORLD_TAG_TABLE_2[nomad_dice(1) - 1][nomad_dice(1) - 1]
+        return WORLD_TAG_TABLE_1[roll(1) - 1][roll(1) - 1]
+    return WORLD_TAG_TABLE_2[roll(1) - 1][roll(1) - 1]
 
 
 ####################### SECTORS ###############################
 
 
-@dataclass
+@dataclass(frozen=True, order=True, kw_only=True, slots=True)
 class StarHex:
     width: int
     height: int
     name: str
-    trade_class: TradeClass | None
-    chara: Characteristic | None
+
+    @property
+    def hexcode(self) -> str:
+        return f"{self.width:02d}{self.height:02d}"
+
+    def repr(self) -> str:
+        return f"StarHex({self.hexcode}, {repr(self.name)})"
+
+
+@dataclass(frozen=True, order=True, repr=True, kw_only=True, slots=True)
+class Planet():
+    name: str
+    star: StarHex
+    trade_class: TradeClass
+    chara: Characteristic
     population: int
-    tech_age: TechAge | None
+    tech_age: TechAge
     world_tag_1: str
     world_tag_2: str
 
+    @property
+    def hexcode(self) -> str:
+        return self.star.hexcode if self.star else "????"
 
-def sector(
+
+@dataclass(order=True, repr=True)
+class StarSystem:
+    star: StarHex
+    planets: list[Planet] = field(default_factory=list)
+
+    def add_planet(self, p: Planet) -> None:
+        self.planets.append(p)
+
+
+@dataclass(repr=True)
+class SectorBounds:
+    height: int = DEFAULT_SECTOR_HEIGHT
+    width: int = DEFAULT_SECTOR_WIDTH
+    x: int = 1
+    y: int = 1
+
+
+def collect_star_systems(
+    planets: Iterable[Planet], stars: Iterable[StarHex] | None = None
+) -> list[StarSystem]:
+    starmap: dict[StarHex, StarSystem] = (
+        {s: StarSystem(s) for s in stars} if stars else {}
+    )
+    for p in planets:
+        s = p.star
+        if s not in starmap:
+            starmap[s] = StarSystem(s)
+        starmap[s].add_planet(p)
+    return sorted(starmap.values())
+
+
+def make_stars(
+    nameset: NameSet,
     density: int = DEFAULT_DENSITY,
     height: int = DEFAULT_SECTOR_HEIGHT,
     width: int = DEFAULT_SECTOR_WIDTH,
     x: int = 1,
-    y: int = 1
+    y: int = 1,
+    roll: NomadDice = nomad_dice,
 ) -> list[StarHex]:
     # Check args
     assert MINIMUM_DENSITY <= density <= MAXIMUM_DENSITY
@@ -566,68 +661,83 @@ def sector(
     assert width > 0
     assert x > 0
     assert y > 0
+    assert roll
 
     return [
-        StarHex(w, h, "", None, None, 0, None, "", "")
+        StarHex(width=w, height=h, name=nameset.make_name())
         for w, h in itertools.product(range(x, width + x), range(y, height + y))
-        if random.randint(MINIMUM_DENSITY, MAXIMUM_DENSITY) <= density
+        if roll(1, 0, MAXIMUM_DENSITY, MINIMUM_DENSITY) <= density
     ]
 
 
-def populate_star(star: StarHex, settlement: str, avg_age: TechAge | None) -> None:
+def make_planet(
+    star: StarHex,
+    name: str,
+    settlement: Settlement | None = None,
+    avg_age: TechAge | None = None,
+    tcin: TradeClass | None = None,
+    roll: NomadDice = nomad_dice,
+) -> Planet:
     assert star
-    assert settlement in SETTLEMENT_TYPES
+    assert name
+    assert not settlement or settlement in SETTLEMENT_TYPES
+    assert not avg_age or avg_age in TECHNOLOGY_AGES
+    assert not tcin or tcin in TRADE_CLASS_TYPES
+    assert roll
 
-    star.trade_class = trade_class(settlement)
-    star.chara = characteristic(star.trade_class)
-    star.population = population(star.trade_class, settlement)
-    star.tech_age = tech_age(star.population, avg_age)
-    star.world_tag_1 = world_tag(1)
-    star.world_tag_2 = world_tag(2)
+    tc: TradeClass = tcin or trade_class(settlement, roll)
+    cha: Characteristic = characteristic(tc, roll)
+    pop: int = population(tc, settlement, roll)
+    ta: TechAge = tech_age(pop, avg_age, roll)
+
+    return Planet(
+        star=star,
+        name=name,
+        trade_class=tc,
+        chara=cha,
+        population=pop,
+        tech_age=ta,
+        world_tag_1=world_tag(1, roll),
+        world_tag_2=world_tag(2, roll),
+    )
 
 
-def generate_stars(
+def sector(
     nameset: NameSet,
     avg_age: TechAge | None = None,
-    settlement: str = "settled",
+    settlement: Settlement | None = None,
     density: int = DEFAULT_DENSITY,
     height: int = DEFAULT_SECTOR_HEIGHT,
     width: int = DEFAULT_SECTOR_WIDTH,
     x: int = 1,
     y: int = 1,
-) -> Tuple[list[StarHex], int]:
+    roll: NomadDice = nomad_dice,
+) -> Tuple[list[Planet], list[StarHex]]:
 
-    # Check args
-    assert nameset
-    assert settlement in SETTLEMENT_TYPES
-    assert MINIMUM_DENSITY <= density <= MAXIMUM_DENSITY
-    assert height > 0
-    assert width > 0
-    assert x > 0
-    assert y > 0
-
-    # generate a map of unnamed stars
-    stars: list[StarHex] = sector(
-        density=density,
-        height=height,
-        width=width,
-        x=x,
-        y=y,
+    # generate a map of stars
+    stars: list[StarHex] = make_stars(
+        nameset, density=density, height=height, width=width, x=x, y=y, roll=roll
     )
 
+    # generate (one) planet for each star
+    planets: list[Planet] = [
+        make_planet(s, s.name, settlement, avg_age, None, roll) for s in stars
+    ]
+
+    return planets, stars
+
+
+####################### OUTPUT #####################################
+
+
+def max_name_length(planets: Iterable[Planet]) -> int:
     length: int = 0
-
-    for star in stars:
-        # generate a name for the star / planet
-        star.name = nameset.make_name()
-        length = max(length, len(star.name))
-        # add attributes to star
-        populate_star(star, settlement, avg_age)
-
-    return stars, length
+    for p in planets:
+        length = max(length, len(p.name), len(p.star.name))
+    return length
 
 
-def write_as_xsv(outfile, stars: Iterable[StarHex], sep: str = ",") -> None:
+def write_as_xsv(outfile, planets: Iterable[Planet], sep: str = ",") -> None:
     writer = csv.writer(
         outfile, delimiter=sep, quotechar='"', quoting=csv.QUOTE_MINIMAL
     )
@@ -643,22 +753,24 @@ def write_as_xsv(outfile, stars: Iterable[StarHex], sep: str = ",") -> None:
             "World Tag 2",
         ]
     )
-    for s in stars:
+    for p in planets:
         writer.writerow(
             [
-                s.name,
-                f"{s.width:02d}{s.height:02d}",
-                trade_class_str(s.trade_class),
-                chara_str(s.chara),
-                str(s.population),
-                tech_age_str(s.tech_age),
-                s.world_tag_1,
-                s.world_tag_2,
+                p.name,
+                p.hexcode,
+                trade_class_str(p.trade_class),
+                chara_str(p.chara),
+                str(p.population),
+                tech_age_str(p.tech_age),
+                p.world_tag_1,
+                p.world_tag_2,
             ]
         )
 
 
-def write_as_text(outfile, stars: Iterable[StarHex], length: int) -> None:
+def write_as_text(outfile, planets: Iterable[Planet]) -> None:
+    length: int = max_name_length(planets)
+
     outfile.write(
         f"|{'Planet':{length}s}|Hex |Trade Class     |Chara.    "
         "|    Population|Tech. Age         |World Tags\n"
@@ -667,60 +779,84 @@ def write_as_text(outfile, stars: Iterable[StarHex], length: int) -> None:
         f"|{'-'*(length)}|----|----------------|----------"
         "|-------------:|------------------|------------------------------\n"
     )
-    for s in stars:
+    for p in planets:
         outfile.write(
-            f"|{s.name:{length}s}"
-            f"|{s.width:02d}{s.height:02d}"
-            f"|{trade_class_str(s.trade_class):16s}"
-            f"|{chara_str(s.chara):10s}"
-            f"|{s.population:14_d}"
-            f"|{tech_age_str(s.tech_age):18s}"
-            f"|{s.world_tag_1}, {s.world_tag_2}\n"
+            f"|{p.name:{length}s}"
+            f"|{p.hexcode}"
+            f"|{trade_class_str(p.trade_class):16s}"
+            f"|{chara_str(p.chara):10s}"
+            f"|{p.population:14_d}"
+            f"|{tech_age_str(p.tech_age):18s}"
+            f"|{p.world_tag_1}, {p.world_tag_2}\n"
         )
 
 
-def write_as_short_text(outfile, stars: Iterable[StarHex], length: int) -> None:
+def write_as_short_text(outfile, planets: Iterable[Planet]) -> None:
+    length: int = max_name_length(planets)
+
     outfile.write(f"|{'Planet':{length}s}|Hex |TC|Ch|    Population|TA|World Tags\n")
     outfile.write(
         f"|{'-'*(length)}|----|--|--|-----:|--|------------------------------\n"
     )
-    for s in stars:
+    for p in planets:
         outfile.write(
-            f"|{s.name:{length}s}"
-            f"|{s.width:02d}{s.height:02d}"
-            f"|{trade_class_abbrev(s.trade_class):2s}"
-            f"|{chara_abbrev(s.chara):2s}"
-            f"|{population_abbrev(s.population):6s}"
-            f"|{tech_age_abbrev(s.tech_age):2s}"
-            f"|{s.world_tag_1}, {s.world_tag_2}\n"
+            f"|{p.name:{length}s}"
+            f"|{p.hexcode}"
+            f"|{trade_class_abbrev(p.trade_class):2s}"
+            f"|{chara_abbrev(p.chara):2s}"
+            f"|{population_abbrev(p.population):6s}"
+            f"|{tech_age_abbrev(p.tech_age):2s}"
+            f"|{p.world_tag_1}, {p.world_tag_2}\n"
         )
 
 
-class StarHexEncoder(json.JSONEncoder):
+class StarPlanetEncoder(json.JSONEncoder):
     def default(self, o) -> dict[str, Any]:
+        if isinstance(o, Planet):
+            p: Planet = o
+            return {
+                "name": p.name,
+                "hex": p.hexcode,
+                "trade_class": trade_class_str(p.trade_class),
+                "characteristic": chara_str(p.chara),
+                "population": p.population,
+                "technology_age": tech_age_str(p.tech_age),
+                "world_tags": [p.world_tag_1, p.world_tag_2],
+            }
         if isinstance(o, StarHex):
             s: StarHex = o
             return {
                 "name": s.name,
-                "hex": f"{s.width:02d}{s.height:02d}",
-                "trade_class": trade_class_str(s.trade_class),
-                "characteristic": chara_str(s.chara),
-                "population": s.population,
-                "technology_age": tech_age_str(s.tech_age),
-                "world_tags": [s.world_tag_1, s.world_tag_2],
+                "hex": s.hexcode,
+            }
+        if isinstance(o, StarSystem):
+            ss: StarSystem = o
+            return {
+                "star": ss.star,
+                "planets": ss.planets,
             }
         return json.JSONEncoder.default(self, o)
 
 
-def write_as_json(outfile, args, stars: Iterable[StarHex]) -> None:
+def write_as_json(
+    outfile,
+    bounds: SectorBounds,
+    planets: Iterable[Planet],
+    stars: Iterable[StarHex] | None = None,
+) -> None:
+    systems: list[StarSystem] = collect_star_systems(planets, stars)
     obj: dict = {
-        "x": args.start_width,
-        "y": args.start_height,
-        "width": args.width,
-        "height": args.height,
-        "planets": stars,
+        "x": bounds.x,
+        "y": bounds.y,
+        "width": bounds.width,
+        "height": bounds.height,
+        "planets": planets,
+        "systems": systems,
     }
-    json.dump(obj, outfile, cls=StarHexEncoder, indent=4)
+    json.dump(obj, outfile, cls=StarPlanetEncoder, indent=4)
+
+
+######################### MAIN #########################################
 
 
 def read_exclude_file(nameset: NameSet, infile) -> None:
@@ -794,7 +930,7 @@ def main() -> None:
         help="settlement level of sector",
         default="settled",
         type=str,
-        choices=SETTLEMENT_TYPES,
+        choices=list(SETTLEMENT_TYPE_NAMES),
     )
     parser.add_argument(
         "-t",
@@ -862,9 +998,9 @@ def main() -> None:
     if args.exclude_list:
         read_exclude_file(nameset, args.exclude_list)
 
-    stars, length = generate_stars(
+    planets, stars = sector(
         nameset=nameset,
-        settlement=args.settlement,
+        settlement=str_to_settlement(args.settlement),
         avg_age=str_to_tech_age(args.tech),
         height=args.height,
         width=args.width,
@@ -874,19 +1010,25 @@ def main() -> None:
     )
 
     if args.debug:
-        debug(f"planets={len(stars)}")
-        debug(f"max_name_length={length}")
+        debug(f"stars={len(stars)}")
+        debug(f"planets={len(planets)}")
 
     # Print out the list of stars
     with args.output as outfile:
         if args.json:
-            write_as_json(outfile, args, stars)
+            bounds: SectorBounds = SectorBounds(
+                height=args.height,
+                width=args.width,
+                x=args.start_width,
+                y=args.start_height,
+            )
+            write_as_json(outfile, bounds, planets, stars)
         elif args.separator:
-            write_as_xsv(outfile, stars, args.separator)
+            write_as_xsv(outfile, planets, args.separator)
         elif args.abbreviate:
-            write_as_short_text(outfile, stars, length)
+            write_as_short_text(outfile, planets)
         else:
-            write_as_text(outfile, stars, length)
+            write_as_text(outfile, planets)
 
 
 if __name__ == "__main__":

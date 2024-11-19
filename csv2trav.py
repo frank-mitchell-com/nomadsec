@@ -331,9 +331,7 @@ def read_csv(reader) -> list[PlanetData]:
 
 def read_json(jsondata) -> list[PlanetData]:
     result: list[PlanetData] = []
-    print("DEBUG", jsondata, file=sys.stderr)
     for p in jsondata["planets"]:
-        print("DEBUG", p, file=sys.stderr)
         data = PlanetData(
             p["name"],
             p["hex"],
