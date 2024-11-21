@@ -24,7 +24,10 @@ from namemaker import make_name_set  # type: ignore
 
 ###################### CONSTANTS ###############################
 
-# coordinates are always f"{width:0d}{height:0d}"
+# Coordinates are expressed as (number across, number down) starting at 1
+# ergo, the highest coordinate is f"{x+width-1:0d}{y+height-1:0d}"
+DEFAULT_SECTOR_X: int = 1
+DEFAULT_SECTOR_Y: int = 1
 DEFAULT_SECTOR_HEIGHT: int = 10
 DEFAULT_SECTOR_WIDTH: int = 8
 
@@ -40,14 +43,14 @@ class NomadDice(Protocol):
     def __call__(
         self, nkeep: int = 2, nadv: int = 0, nsides: int = 6, low: int = 1
     ) -> int:
-        pass
+        return 0    # keep type checkers happy
 
 
 class NameSet(Protocol):
     def make_name(self) -> str:
-        return ""
+        return ""   # keep type checkers happy
 
-    def add_to_history(self, name: str) -> None: ...
+    def add_to_history(self, name_s) -> None: ...
 
 
 ####################### DICE #################################
@@ -587,13 +590,13 @@ def world_tag(index: int = 1, roll: NomadDice = nomad_dice) -> str:
 
 @dataclass(frozen=True, order=True, kw_only=True, slots=True)
 class StarHex:
-    width: int
-    height: int
+    x: int
+    y: int
     name: str
 
     @property
     def hexcode(self) -> str:
-        return f"{self.width:02d}{self.height:02d}"
+        return f"{self.x:02d}{self.y:02d}"
 
     def repr(self) -> str:
         return f"StarHex({self.hexcode}, {repr(self.name)})"
@@ -628,8 +631,16 @@ class StarSystem:
 class SectorBounds:
     height: int = DEFAULT_SECTOR_HEIGHT
     width: int = DEFAULT_SECTOR_WIDTH
-    x: int = 1
-    y: int = 1
+    x: int = DEFAULT_SECTOR_X
+    y: int = DEFAULT_SECTOR_Y
+
+
+    def x_range(self) -> Iterable[int]:
+        return range(self.x, self.width + self.x)
+
+
+    def y_range(self) -> Iterable[int]:
+        return range(self.y, self.height + self.y)
 
 
 def collect_star_systems(
@@ -649,23 +660,23 @@ def collect_star_systems(
 def make_stars(
     nameset: NameSet,
     density: int = DEFAULT_DENSITY,
-    height: int = DEFAULT_SECTOR_HEIGHT,
-    width: int = DEFAULT_SECTOR_WIDTH,
-    x: int = 1,
-    y: int = 1,
+    bounds: SectorBounds | None = None,
     roll: NomadDice = nomad_dice,
 ) -> list[StarHex]:
+
+    b: SectorBounds = bounds if bounds else SectorBounds()
+
     # Check args
     assert MINIMUM_DENSITY <= density <= MAXIMUM_DENSITY
-    assert height > 0
-    assert width > 0
-    assert x > 0
-    assert y > 0
+    assert b.height > 0
+    assert b.width > 0
+    assert b.x > 0
+    assert b.y > 0
     assert roll
 
     return [
-        StarHex(width=w, height=h, name=nameset.make_name())
-        for w, h in itertools.product(range(x, width + x), range(y, height + y))
+        StarHex(x=x, y=y, name=nameset.make_name())
+        for x, y in itertools.product(b.x_range(), b.y_range())
         if roll(1, 0, MAXIMUM_DENSITY, MINIMUM_DENSITY) <= density
     ]
 
@@ -707,16 +718,13 @@ def sector(
     avg_age: TechAge | None = None,
     settlement: Settlement | None = None,
     density: int = DEFAULT_DENSITY,
-    height: int = DEFAULT_SECTOR_HEIGHT,
-    width: int = DEFAULT_SECTOR_WIDTH,
-    x: int = 1,
-    y: int = 1,
+    bounds: SectorBounds | None = None,
     roll: NomadDice = nomad_dice,
 ) -> Tuple[list[Planet], list[StarHex]]:
 
     # generate a map of stars
     stars: list[StarHex] = make_stars(
-        nameset, density=density, height=height, width=width, x=x, y=y, roll=roll
+        nameset, density=density, bounds=bounds, roll=roll
     )
 
     # generate (one) planet for each star
@@ -998,15 +1006,19 @@ def main() -> None:
     if args.exclude_list:
         read_exclude_file(nameset, args.exclude_list)
 
+    bounds: SectorBounds = SectorBounds(
+        height=args.height,
+        width=args.width,
+        x=args.start_width,
+        y=args.start_height,
+    )
+
     planets, stars = sector(
         nameset=nameset,
         settlement=str_to_settlement(args.settlement),
         avg_age=str_to_tech_age(args.tech),
-        height=args.height,
-        width=args.width,
         density=args.density,
-        x=args.start_width,
-        y=args.start_height,
+        bounds=bounds,
     )
 
     if args.debug:
@@ -1016,12 +1028,6 @@ def main() -> None:
     # Print out the list of stars
     with args.output as outfile:
         if args.json:
-            bounds: SectorBounds = SectorBounds(
-                height=args.height,
-                width=args.width,
-                x=args.start_width,
-                y=args.start_height,
-            )
             write_as_json(outfile, bounds, planets, stars)
         elif args.separator:
             write_as_xsv(outfile, planets, args.separator)
