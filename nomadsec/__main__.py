@@ -28,6 +28,7 @@ from .common import (
     Settlement,
     TechAge,
 )
+from .namegen import GrammarNameSet
 from .sector import sector
 from .tables import (
     settlement_name_list,
@@ -60,11 +61,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generate a sector for the _FTL: Nomad_ RPG"
     )
-    parser.add_argument(
+    nsgroup = parser.add_mutually_exclusive_group()
+    nsgroup.add_argument(
         "-n",
         "--namelist",
         help="text file providing example names",
         default="Greek mythology.txt",
+    )
+    nsgroup.add_argument(
+        "-g",
+        "--grammar",
+        help="JSON file describing a grammar for names",
     )
     parser.add_argument(
         "-x",
@@ -177,7 +184,12 @@ def main() -> None:
         debug(f"tech={args.tech}")
 
     # initialize namemaker
-    nameset: NameSet = make_name_set(args.namelist)
+    nameset: NameSet
+
+    if args.grammar:
+        nameset = GrammarNameSet(args.grammar)
+    else:
+        nameset = make_name_set(args.namelist)
 
     if args.exclude_list:
         read_exclude_file(nameset, args.exclude_list)

@@ -1,9 +1,27 @@
 [project]
 name = "nomadsec"
 version = "0.1.0"
-description = "Add your description here"
+description = "Generates _Faster Than Light: Nomad_ RPG sectors"
+authors = [
+    { name = "Frank Mitchell", email = "me@frank-mitchell.com" }
+]
 readme = "README.md"
+license.file = "LICENSE.txt"
 requires-python = ">=3.13"
 dependencies = [
+    "flask>=3.1.0",
     "namemaker>=1.2",
 ]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.7",
+    "pytest>=8.3.3",
+]
+lint = [
+    "ruff>=0.8.0",
+]
+
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
