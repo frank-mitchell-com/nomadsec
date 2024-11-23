@@ -57,6 +57,7 @@ def main() -> None:
     # sourcery skip: extract-method
     # Parse arguments
     parser = argparse.ArgumentParser(
+        prog="nomadsec",
         description="Generate a sector for the _FTL: Nomad_ RPG"
     )
     nsgroup = parser.add_mutually_exclusive_group()

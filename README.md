@@ -18,6 +18,43 @@ Run with `python -m nomadsec`.
 ### Usage
 
 ```
+usage: nomadsec [-h] [-n NAMELIST | -g GRAMMAR] [-x EXCLUDE_LIST] [-W WIDTH]
+                [-H HEIGHT] [-X START_WIDTH] [-Y START_HEIGHT]
+                [-d {1,2,3,4,5}]
+                [-s {core,settled,conflict,frontier,unexplored}]
+                [-t {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}] [-D] [-o OUTPUT]
+                [-a] [-j] [--separator SEPARATOR] [--csv] [--tsv]
+
+Generate a sector for the _FTL: Nomad_ RPG
+
+options:
+  -h, --help            show this help message and exit
+  -n, --namelist NAMELIST
+                        text file providing example names
+  -g, --grammar GRAMMAR
+                        JSON file describing a grammar for names
+  -x, --exclude-list EXCLUDE_LIST
+                        text file providing names NOT to use
+  -W, --width WIDTH     number of hexes/parsecs across
+  -H, --height HEIGHT   number of hexes/parsecs down
+  -X, --start-width START_WIDTH
+                        first index across
+  -Y, --start-height START_HEIGHT
+                        first index down
+  -d, --density {1,2,3,4,5}
+                        density of stars (n in 6)
+  -s, --settlement {core,settled,conflict,frontier,unexplored}
+                        settlement level of sector
+  -t, --tech {ep,lp,em,lm,ea,la,es,ls,ei,li,eg,lg}
+                        technology age of sector
+  -D, --debug           write debugging info to error stream
+  -o, --output OUTPUT   output file
+  -a, --abbreviate      abbreviate common strings in default format
+  -j, --json            write output as JSON
+  --separator SEPARATOR
+                        write with the given character as a separator
+  --csv                 write as comma-separated values
+  --tsv                 write as tab-separated values
 ```
 
 `NAMELIST` is a simple UTF-8 text file with one sample name per line.
