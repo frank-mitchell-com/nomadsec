@@ -41,8 +41,10 @@ def _load_grammar(grammar_name: str) -> Mapping:
     rcname = f"{_GRAMMAR_DIR}/{grammar_name}"
     if not grammar_name.endswith(".json"):
         rcname = rcname + ".json"
-    data: str = pkgutil.get_data(__name__, rcname)
-    return json.loads(data)
+    data: bytes | None = pkgutil.get_data(__name__, rcname)
+    if data:
+        return json.loads(data)
+    return {}
 
 
 class GrammarNameSet:

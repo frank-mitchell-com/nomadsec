@@ -2,7 +2,6 @@
 Common definitions required for other submodules.
 """
 
-from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import auto
 from enum import Enum

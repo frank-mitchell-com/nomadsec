@@ -3,7 +3,6 @@ Routines to generate planets, sectors, and star systems.
 """
 
 import itertools
-import sys
 from collections.abc import Iterable
 from typing import Tuple
 
@@ -11,6 +10,7 @@ from .common import (
     DEFAULT_DENSITY,
     MAXIMUM_DENSITY,
     MINIMUM_DENSITY,
+    Characteristic,
     NameSet,
     NomadDice,
     Planet,
@@ -45,7 +45,7 @@ def collect_star_systems(
         s = p.star
         if s not in starmap:
             starmap[s] = []
-        starmap[s].add_planet(p)
+        starmap[s].append(p)
     return sorted(StarSystem(s, plist) for s, plist in starmap.items())
 
 

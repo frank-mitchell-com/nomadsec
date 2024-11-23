@@ -25,8 +25,6 @@ from .common import (
     MINIMUM_DENSITY,
     NameSet,
     SectorBounds,
-    Settlement,
-    TechAge,
 )
 from .namegen import GrammarNameSet
 from .sector import sector
