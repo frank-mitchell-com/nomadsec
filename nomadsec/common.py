@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+Common definitions required for other submodules.
+"""
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -24,23 +26,41 @@ MINIMUM_DENSITY: int = 1
 
 
 class NomadDice(Protocol):
+    """
+    Protocol for Callables to roll Nomad-style dice.
+
+    `nkeep`: number of dice to keep (default 2);
+    `nadv`: number of dice to add (default 0);
+    `nsides`: number of sides on a die (default 6);
+    `low`: lowest number on the die (default 1).
+
+    return:
+        results of the dice roll.
+    """
+
     def __call__(
         self, nkeep: int = 2, nadv: int = 0, nsides: int = 6, low: int = 1
-    ) -> int:
-        pass
+    ) -> int: ...
 
 
 class NameSet(Protocol):
-    def make_name(self) -> str:
-        return ""
+    """
+    Prototype for a generator of random name, based on `namemaker.nameset`.
+    """
 
-    def add_to_history(self, name: str) -> None: ...
+    def make_name(self) -> str: ...
+
+    def add_to_history(self, name_s) -> None: ...
 
 
 ##################### ENUMS ##############################
 
 
 class Settlement(Enum):
+    """
+    Sector-wide settlement type
+    """
+
     CORE = auto()
     SETTLED = auto()
     CONFLICT = auto()
@@ -49,6 +69,10 @@ class Settlement(Enum):
 
 
 class TradeClass(Enum):
+    """
+    Planetary trade class
+    """
+
     AGRICULTURAL = auto()
     GARDEN = auto()
     INDUSTRIAL = auto()
@@ -60,6 +84,10 @@ class TradeClass(Enum):
 
 
 class Characteristic(Enum):
+    """
+    Planetary characteristic.
+    """
+
     ASTEROID = auto()
     CORROSIVE = auto()
     DESERT = auto()
@@ -74,6 +102,10 @@ class Characteristic(Enum):
 
 
 class TechAge(Enum):
+    """
+    Technology Age.
+    """
+
     NO_TECHNOLOGY = 0
     EARLY_PRIMITIVE = 1
     LATE_PRIMITIVE = 2
@@ -90,10 +122,16 @@ class TechAge(Enum):
     COSMIC = 13
 
 
-######################## DATA STRUCTURES #############################
+######################## DATA RECORDS #############################
+
 
 @dataclass(frozen=True, order=True, kw_only=True, slots=True)
 class StarHex:
+    """
+    A sector hex containing a star.
+    Hex (1,1) is the top left corner.
+    """
+
     x: int
     y: int
     name: str
@@ -107,7 +145,11 @@ class StarHex:
 
 
 @dataclass(frozen=True, order=True, repr=True, kw_only=True, slots=True)
-class Planet():
+class Planet:
+    """
+    Basic parameters of a planet.
+    """
+
     name: str
     star: StarHex
     trade_class: TradeClass
@@ -124,6 +166,11 @@ class Planet():
 
 @dataclass(order=True, repr=True)
 class StarSystem:
+    """
+    Representation of an entire star system, star and planet.
+    NOT IMMUTABLE.
+    """
+
     star: StarHex
     planets: list[Planet] = field(default_factory=list)
 
@@ -131,12 +178,17 @@ class StarSystem:
         self.planets.append(p)
 
 
-@dataclass(repr=True)
+@dataclass(frozen=True, order=True, repr=True, kw_only=True, slots=True)
 class SectorBounds:
-    height: int = DEFAULT_SECTOR_HEIGHT
-    width: int = DEFAULT_SECTOR_WIDTH
+    """
+    Boundaries of a star sector relative to a larger map.
+    Hex (1,1) is the top left corner.
+    """
+
     x: int = DEFAULT_SECTOR_X
     y: int = DEFAULT_SECTOR_Y
+    height: int = DEFAULT_SECTOR_HEIGHT
+    width: int = DEFAULT_SECTOR_WIDTH
 
     def x_range(self):
         return range(self.x, self.x + self.width)

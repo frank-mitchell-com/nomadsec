@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+Routines to generate random planetary parameters.
+"""
 
 import random
 import string
@@ -44,11 +46,7 @@ SETTLEMENT_TYPES: list[Settlement] = list(Settlement)
 
 
 SETTLEMENT_TYPE_NAMES: dict[str, Settlement] = {
-    "core": Settlement.CORE,
-    "settled": Settlement.SETTLED,
-    "conflict": Settlement.CONFLICT,
-    "frontier": Settlement.FRONTIER,
-    "unexplored": Settlement.UNEXPLORED,
+    s.name.lower(): s for s in SETTLEMENT_TYPES
 }
 
 
@@ -371,12 +369,20 @@ WORLD_TAG_TABLE_2: list[list[str]] = [
 
 ####################### TABLE LOOKUPS #############################
 
+
 def settlement_name_list() -> list[str]:
     return list(SETTLEMENT_TYPE_NAMES)
 
 
 def str_to_settlement(name: str | None) -> Settlement | None:
-    return SETTLEMENT_TYPE_NAMES.get(name) if name else None
+    return SETTLEMENT_TYPE_NAMES.get(name.lower()) if name else None
+
+
+def settlement_str(settlement: Settlement | None) -> str:
+    assert not settlement or settlement in SETTLEMENT_TYPES
+    if not settlement:
+        return ""
+    return settlement.name.capitalize()
 
 
 def trade_class(settle: Settlement | None, roll: NomadDice = nomad_dice) -> TradeClass:
@@ -484,7 +490,7 @@ def tech_age_str(age: TechAge | None) -> str:
 
 
 def tech_age_abbrev_list() -> list[str]:
-    return list(TECHNOLOGY_AGES_TO_ABBREVS)
+    return list(TECHNOLOGY_AGES_ABBREVS)
 
 
 def tech_age_abbrev(age: TechAge | None) -> str:

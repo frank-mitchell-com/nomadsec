@@ -18,11 +18,13 @@ DEFAULT_NUMBER_OF_NAMES = 100
 MAX_RETRIES: int = 1_000_000
 
 
-class NameSource(Protocol):
-    def name(self) -> str: ...
+class NameSet(Protocol):
+    def make_name(self) -> str: ...
+
+    def add_to_history(self, name_s) -> None: ...
 
 
-class SimpleNameSource:
+class GrammarNameSet:
     def __init__(self, jsonsrc: dict):
         assert "min_syllables" in jsonsrc
         assert "max_syllables" in jsonsrc
@@ -35,6 +37,7 @@ class SimpleNameSource:
         self._medial: Sequence[str]
         self._final: Sequence[str]
         self._vowels: Sequence[str]
+        self._pastnames: set[str] = set()
 
         # TODO: Verify types from `jsonsrc`
         self._min = jsonsrc["min_syllables"]
@@ -52,7 +55,7 @@ class SimpleNameSource:
         else:
             self._medial = jsonsrc["medial"]
 
-    def name(self) -> str:
+    def _internal_make_name(self) -> str:
         nsyllables: int = random.randint(self._min, self._max)
 
         name_seq: list[str] = [
@@ -65,20 +68,17 @@ class SimpleNameSource:
 
         return "".join(name_seq).capitalize()
 
-
-class NameUniquifier:
-    def __init__(self, source: NameSource) -> None:
-        self._source = source
-        self._pastnames: set[str] = set()
-
-    def name(self) -> str:
+    def make_name(self) -> str:
         count: int = 0
-        newname: str = self._source.name()
+        newname: str = self._internal_make_name()
         while newname and newname in self._pastnames and count < MAX_RETRIES:
-            newname = self._source.name()
+            newname = self._internal_make_name()
             count += 1
         self._pastnames.add(newname)
         return newname
+
+    def add_to_history(self, name_s) -> None:
+        self._pastnames.add(name_s)
 
 
 def main() -> None:
@@ -107,14 +107,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    namesrc: NameSource
+    namesrc: NameSet
 
     with args.namefile as jsonfile:
-        namesrc = NameUniquifier(SimpleNameSource(json.load(jsonfile)))
+        namesrc = GrammarNameSet(json.load(jsonfile))
 
     with args.output as outfile:
         for _ in range(args.number):
-            outfile.write(f"{namesrc.name()}\n")
+            outfile.write(f"{namesrc.make_name()}\n")
 
 
 if __name__ == "__main__":

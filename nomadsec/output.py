@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+Routines to write out sector data.
+"""
 
 import csv
 import json

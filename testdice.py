@@ -101,7 +101,7 @@ def test_dice(title: str, expect: dict[int, float], nkeep: int, nbonus: int) -> 
         print(f"{x:2d}\t{actual:.8f}\t{expect[x]:.8f}\t{chisq:.10f}")
     print(f"{'':2s}\t{'':10s}\t{'TOTAL':10s}\t{chisqtotal:.10f}")
 
-    end_time:float = time.time()
+    end_time: float = time.time()
 
     elapsed_time: float = end_time - start_time
 

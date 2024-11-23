@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+Routines to generate planets, sectors, and star systems.
+"""
 
 import itertools
 import sys
@@ -38,15 +40,13 @@ TRADE_CLASS_TYPES = list(TradeClass)
 def collect_star_systems(
     planets: Iterable[Planet], stars: Iterable[StarHex] | None = None
 ) -> list[StarSystem]:
-    starmap: dict[StarHex, StarSystem] = (
-        {s: StarSystem(s) for s in stars} if stars else {}
-    )
+    starmap: dict[StarHex, list[Planet]] = {s: [] for s in stars} if stars else {}
     for p in planets:
         s = p.star
         if s not in starmap:
-            starmap[s] = StarSystem(s)
+            starmap[s] = []
         starmap[s].add_planet(p)
-    return sorted(starmap.values())
+    return sorted(StarSystem(s, plist) for s, plist in starmap.items())
 
 
 def make_stars(
@@ -56,7 +56,7 @@ def make_stars(
     roll: NomadDice = nomad_dice,
 ) -> list[StarHex]:
     if not bounds:
-        bounds = SectorBounds() # use defaults
+        bounds = SectorBounds()  # use defaults
 
     # Check args
     assert MINIMUM_DENSITY <= density <= MAXIMUM_DENSITY
@@ -107,8 +107,8 @@ def make_planet(
 
 def sector(
     nameset: NameSet,
-    avg_age: TechAge | None = None,
     settlement: Settlement | None = None,
+    avg_age: TechAge | None = None,
     density: int = DEFAULT_DENSITY,
     bounds: SectorBounds | None = None,
     roll: NomadDice = nomad_dice,
@@ -116,7 +116,10 @@ def sector(
 
     # generate a map of stars
     stars: list[StarHex] = make_stars(
-        nameset, density=density, bounds=bounds, roll=roll,
+        nameset,
+        density=density,
+        bounds=bounds,
+        roll=roll,
     )
 
     # generate (one) planet for each star

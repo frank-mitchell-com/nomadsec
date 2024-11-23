@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Main program for the command-line version.
+"""
 
 # /// script
 # requires-python = ">=3.12"
@@ -100,7 +103,7 @@ def main() -> None:
     parser.add_argument(
         "-d",
         "--density",
-        help="density of stars (n in 6)",
+        help=f"density of stars (n in {MAXIMUM_DENSITY})",
         default=DEFAULT_DENSITY,
         type=int,
         choices=range(MINIMUM_DENSITY, MAXIMUM_DENSITY),
