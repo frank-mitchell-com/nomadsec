@@ -11,7 +11,7 @@ from .common import (
     MAXIMUM_DENSITY,
     MINIMUM_DENSITY,
     Characteristic,
-    NameSet,
+    NameMaker,
     NomadDice,
     Planet,
     SectorBounds,
@@ -50,7 +50,7 @@ def collect_star_systems(
 
 
 def make_stars(
-    nameset: NameSet,
+    namesrc: NameMaker,
     density: int = DEFAULT_DENSITY,
     bounds: SectorBounds | None = None,
     roll: NomadDice = nomad_dice,
@@ -67,7 +67,7 @@ def make_stars(
     assert roll
 
     return [
-        StarHex(x=x, y=y, name=nameset.make_name())
+        StarHex(x=x, y=y, name=namesrc.make_name())
         for x, y in itertools.product(bounds.x_range(), bounds.y_range())
         if roll(1, 0, MAXIMUM_DENSITY, MINIMUM_DENSITY) <= density
     ]
@@ -106,7 +106,7 @@ def make_planet(
 
 
 def sector(
-    nameset: NameSet,
+    namesrc: NameMaker,
     settlement: Settlement | None = None,
     avg_age: TechAge | None = None,
     density: int = DEFAULT_DENSITY,
@@ -116,7 +116,7 @@ def sector(
 
     # generate a map of stars
     stars: list[StarHex] = make_stars(
-        nameset,
+        namesrc,
         density=density,
         bounds=bounds,
         roll=roll,

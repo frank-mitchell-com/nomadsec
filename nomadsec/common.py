@@ -42,7 +42,7 @@ class NomadDice(Protocol):
     ) -> int: ...
 
 
-class NameSet(Protocol):
+class NameMaker(Protocol):
     """
     Prototype for a generator of random name, based on `namemaker.nameset`.
     """

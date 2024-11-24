@@ -47,7 +47,7 @@ def _load_grammar(grammar_name: str) -> Mapping:
     return {}
 
 
-class GrammarNameSet:
+class GrammarNameMaker:
     def __init__(self, grammar_name: str):
         grammar: Mapping = _load_grammar(grammar_name)
 

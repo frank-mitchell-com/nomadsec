@@ -23,10 +23,10 @@ from .common import (
     DEFAULT_SECTOR_Y,
     MAXIMUM_DENSITY,
     MINIMUM_DENSITY,
-    NameSet,
+    NameMaker,
     SectorBounds,
 )
-from .namegen import GrammarNameSet
+from .namegen import GrammarNameMaker
 from .sector import sector
 from .tables import (
     settlement_name_list,
@@ -42,11 +42,11 @@ from .output import (
 )
 
 
-def read_exclude_file(nameset: NameSet, infile) -> None:
+def read_exclude_file(namesrc: NameMaker, infile) -> None:
     with infile:
         for line in infile.readlines():
             name: str = line.strip()
-            nameset.add_to_history(name)
+            namesrc.add_to_history(name)
 
 
 def debug(*args, **kwargs) -> None:
@@ -183,15 +183,15 @@ def main() -> None:
         debug(f"tech={args.tech}")
 
     # initialize namemaker
-    nameset: NameSet
+    namesrc: NameMaker
 
     if args.grammar:
-        nameset = GrammarNameSet(args.grammar)
+        namesrc = GrammarNameMaker(args.grammar)
     else:
-        nameset = make_name_set(args.namelist)
+        namesrc = make_name_set(args.namelist)
 
     if args.exclude_list:
-        read_exclude_file(nameset, args.exclude_list)
+        read_exclude_file(namesrc, args.exclude_list)
 
     bounds: SectorBounds = SectorBounds(
         height=args.height,
@@ -201,7 +201,7 @@ def main() -> None:
     )
 
     planets, stars = sector(
-        nameset=nameset,
+        namesrc=namesrc,
         settlement=str_to_settlement(args.settlement),
         avg_age=str_to_tech_age(args.tech),
         density=args.density,
